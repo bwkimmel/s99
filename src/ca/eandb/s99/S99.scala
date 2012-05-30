@@ -262,3 +262,12 @@ object P25 {
 
 }
 
+object P26 {
+
+  def combination[T](n: Int, list: List[T]): List[List[T]] = (n, list) match {
+    case (0, _) | (_, Nil) => Nil
+    case (n, x :: rest) =>
+      combination(n - 1, rest) map (x :: _) ::: combination(n, rest)
+  }
+
+}
