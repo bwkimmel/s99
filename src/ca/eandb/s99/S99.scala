@@ -10,6 +10,7 @@ package ca.eandb.s99
 
 import scala.util.Random
 import ca.eandb.s99.Common._
+import java.util.NoSuchElementException
 
 object Common {
 
@@ -26,7 +27,7 @@ object P01 {
   def last[T](list: List[T]): T = list match {
     case x :: Nil => x
     case x :: rest => last(rest)
-    case _ => sys.error("list is empty")
+    case _ => throw new NoSuchElementException("last of empty list")
   }
 
 }
@@ -36,7 +37,7 @@ object P02 {
   def penultimate[T](list: List[T]): T = list match {
     case x :: _ :: Nil => x
     case x :: rest => penultimate(rest)
-    case _ => sys.error("not enough elements")
+    case _ => throw new NoSuchElementException("penultimate of list of < 2 elements")
   }
 
 }
@@ -97,39 +98,31 @@ object P08 {
 
 object P09 {
 
-  def pack[T](list: List[T], acc: List[List[T]] = Nil): List[List[T]] = list match {
-    case Nil => P05.reverse(acc)
-    case x :: (tail @ (y :: rest)) if x != y =>
-      pack(tail, (x :: Nil) :: acc)
-    case x :: rest =>
-      pack(rest, (x :: acc.head) :: acc.tail)
-  }
+  def pack[T](list: List[T], acc: List[List[T]] = Nil): List[List[T]] =
+    (list, acc) match {
+      case (Nil, _) => P05.reverse(acc)
+      case (x :: rest, (head @ (y :: _)) :: tail) if x == y =>
+        pack(rest, (x :: head) :: tail)
+      case (x :: rest, _) =>
+        pack(rest, (x :: Nil) :: acc)
+    }
 
 }
 
 object P10 {
 
-  def incr[T] = (i: Int, x: T) => (i + 1, x)
-
-  def encode[T](list: List[T], acc: List[(Int, T)] = Nil) =
+  def encode[T](list: List[T]) =
     P09.pack(list).map(x => (P04.length(x), x.head))
 
 }
 
 object P11 {
 
-  def incr[T](e: Any) = e match {
-    case x: T => (2, x)
-    case (i: Int, x: T) => (i + 1, x)
-  }
-
-  def encode[T](list: List[T], acc: List[Any] = Nil): List[Any] = list match {
-    case Nil => P05.reverse(acc)
-    case x :: (tail @ (y :: rest)) if x != y =>
-      encode(tail, x :: acc)
-    case x :: rest =>
-      encode(rest, incr(acc.head) :: acc.tail)
-  }
+  def encodeModified[T](list: List[T]): List[Any] =
+    P10.encode(list).map { _ match {
+      case (1, x) => x
+      case pair => pair
+    }}
 
 }
 
@@ -147,13 +140,14 @@ object P13 {
 
   def incr[T](x: (Int, T)) = (x._1 + 1, x._2)
 
-  def encodeDirect[T](list: List[T], acc: List[(Int, T)] = Nil): List[(Int, T)] = list match {
-    case Nil => P05.reverse(acc)
-    case x :: (tail @ (y :: rest)) if x != y =>
-      encodeDirect(tail, (1, x) :: acc)
-    case x :: rest =>
-      encodeDirect(rest, incr(acc.head) :: acc.tail)
-  }
+  def encodeDirect[T](list: List[T], acc: List[(Int, T)] = Nil): List[(Int, T)] =
+    (list, acc) match {
+      case (Nil, _) => P05.reverse(acc)
+      case (x :: rest, (n, y) :: tail) if x == y =>
+        encodeDirect(rest, (n + 1, y) :: tail)
+      case (x :: rest, _) =>
+        encodeDirect(rest, (1, x) :: acc)
+    }
 
 }
 
@@ -197,19 +191,15 @@ object P17 {
 object P18 {
 
   def slice[T](i: Int, j: Int, list: List[T], acc: List[T] = Nil): List[T] =
-    if (i > 0)
-      slice(i - 1, j - 1, list.tail, acc)
-    else if (j > 0)
-      slice(0, j - 1, list.tail, list.head :: acc)
-    else
-      P05.reverse(acc)
+    P17.split(j - i, P17.split(i, list)._2)._1
 
 }
 
 object P19 {
 
   def rotate[T](n: Int, list: List[T]) =
-    ((a: List[T], b: List[T]) => b ::: a) tupled P17.split(n, list)
+    ((a: List[T], b: List[T]) => b ::: a) tupled P17.split(
+      if (n < 0) P04.length(list) + n else n, list)
 
 }
 
@@ -233,7 +223,7 @@ object P21 {
 object P22 {
 
   def range(i: Int, j: Int, acc: List[Int] = Nil): List[Int] =
-    if (i < j)
+    if (i <= j)
       range(i, j - 1, j :: acc)
     else acc
 
@@ -241,13 +231,12 @@ object P22 {
 
 object P23 {
 
-  def randomSelect[T](n: Int, list: List[T], rnd: Random = new Random, acc: List[T] = Nil): List[T] = {
-    val index = rnd.nextInt(P04.length(list))
-    val rem = P20.removeAt(index, list)
-    if (n > 0)
+  def randomSelect[T](n: Int, list: List[T], rnd: Random = new Random, acc: List[T] = Nil): List[T] =
+    if (n > 0) {
+      val index = rnd.nextInt(P04.length(list))
+      val rem = P20.removeAt(index, list)
       randomSelect(n - 1, rem._1, rnd, rem._2 :: acc)
-    else acc
-  }
+    } else acc
 
 }
 
@@ -267,10 +256,11 @@ object P25 {
 
 object P26 {
 
-  def combination[T](n: Int, list: List[T]): List[List[T]] = (n, list) match {
-    case (0, _) | (_, Nil) => Nil
-    case (n, x :: rest) =>
-      (combination(n - 1, rest) map (x :: _)) ::: combination(n, rest)
+  def combinations[T](n: Int, list: List[T]): List[List[T]] = (n, list) match {
+    case (0, _) => Nil :: Nil
+    case (_, Nil) => Nil
+    case (_, x :: rest) =>
+      (combinations(n - 1, rest) map (x :: _)) ::: combinations(n, rest)
   }
 
 }
