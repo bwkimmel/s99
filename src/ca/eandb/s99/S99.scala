@@ -285,3 +285,18 @@ object P27 {
   def group3[T](list: List[T]) = group(List(3, 3, 3), list)
 
 }
+
+object P28 {
+
+  def lsort[T](lists: List[List[T]]): List[List[T]] =
+    lists.zip(lists map { x => P04.length(x) }).sortBy(_._2).map(_._1)
+
+  def lsortFreq[T](lists: List[List[T]]): List[List[T]] = {
+    val lenths = lists map { x => P04.length(x) }
+    val freq = Map(
+      P10.encode(lengths sorted) map {
+        case (f, l) => (l, f) }:_*)
+    (lists zip lengths sortBy { case (_, len) => freq(len) }).map(_._1)
+  }
+
+}
