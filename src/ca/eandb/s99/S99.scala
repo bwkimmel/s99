@@ -13,8 +13,8 @@ import ca.eandb.s99.Common._
 
 object Common {
 
-  def isEqual[T](a: List[T], b: List[T]) = (a, b) match {
-    case (x :: resta, y :: restb) if x == y => equal_?(resta, restb)
+  def isEqual[T](a: List[T], b: List[T]): Boolean = (a, b) match {
+    case (x :: resta, y :: restb) if x == y => isEqual(resta, restb)
     case _ => false
   }
 
@@ -22,28 +22,28 @@ object Common {
 
 object P01 {
 
-  def last[T](list: List[T]) = list match {
-    case Nil => Nil
+  def last[T](list: List[T]): T = list match {
     case x :: Nil => x
-    case x :: rest => last rest
+    case x :: rest => last(rest)
+    case _ => sys.error("list is empty")
   }
 
 }
 
 object P02 {
 
-  def butLast[T](list: List[T]) = list match {
+  def butLast[T](list: List[T]): List[T] = list match {
     case Nil => Nil
     case tail @ (x :: Nil) => tail
     case tail @ (x :: y :: Nil) => tail
-    case x :: rest => butLast rest
+    case x :: rest => butLast(rest)
   }
 
 }
 
 object P03 {
 
-  def elementAt[T](list: List[T], index: Int) =
+  def elementAt[T](list: List[T], index: Int): T =
     if (index < 0)
       list.head
     else
@@ -53,7 +53,7 @@ object P03 {
 
 object P04 {
 
-  def count[T](list: List[T], acc: Int = 0) = list match {
+  def count[T](list: List[T], acc: Int = 0): Int = list match {
     case Nil => acc
     case _ :: rest => count(rest, acc + 1)
   }
@@ -62,7 +62,7 @@ object P04 {
 
 object P05 {
 
-  def reverse[T](list: List[T], acc: List[T]) = list match {
+  def reverse[T](list: List[T], acc: List[T] = Nil): List[T] = list match {
     case Nil => Nil
     case x :: rest => reverse(rest, x :: acc)
   }
@@ -88,7 +88,7 @@ object P07 {
 
 object P08 {
 
-  def compress[T](list: List[T], acc: List[T] = Nil) = list match {
+  def compress[T](list: List[T], acc: List[T] = Nil): List[T] = list match {
     case Nil => P05.reverse(acc)
     case x :: (tail @ (y :: rest)) if x == y => compress(tail, acc)
     case x :: rest => compress(rest, x :: acc)
@@ -103,7 +103,7 @@ object P09 {
     case x :: (tail @ (y :: rest)) if x != y =>
       pack(tail, (x :: Nil) :: acc)
     case x :: rest =>
-      pack(tail, (x :: acc.head) :: acc.tail)
+      pack(rest, (x :: acc.head) :: acc.tail)
   }
 
 }
@@ -129,14 +129,14 @@ object P11 {
     case x :: (tail @ (y :: rest)) if x != y =>
       encode(tail, x :: acc)
     case x :: rest =>
-      encode(tail, incr(acc.head) :: acc.tail)
+      encode(rest, incr(acc.head) :: acc.tail)
   }
 
 }
 
 object P12 {
 
-  def decode[T](list: List[(Int, T)], acc: List[T]) = list match {
+  def decode[T](list: List[(Int, T)], acc: List[T] = Nil): List[T] = list match {
     case Nil => P05.reverse(acc)
     case (i, x) :: rest if i > 0 => decode((i - 1, x) :: rest, x :: acc)
     case _ :: rest => decode(rest, acc)
@@ -146,40 +146,42 @@ object P12 {
 
 object P13 {
 
-  def incr[T] = (i: Int, x: T) => (i + 1, x)
+  def incr[T](x: (Int, T)) = (x._1 + 1, x._2)
 
-  def encodeDirect[T](list: List[T], acc: List[(Int, T)] = Nil) = list match {
+  def encodeDirect[T](list: List[T], acc: List[(Int, T)] = Nil): List[(Int, T)] = list match {
     case Nil => P05.reverse(acc)
     case x :: (tail @ (y :: rest)) if x != y =>
-      encode(tail, (1, x) :: acc)
+      encodeDirect(tail, (1, x) :: acc)
     case x :: rest =>
-      encode(tail, incr(acc.head) :: acc.tail)
+      encodeDirect(rest, incr(acc.head) :: acc.tail)
   }
 
 }
 
 object P14 {
 
-  def duplicate[T](list: List[T]) =
-    P12.decode(list map (2, _))
+  def duplicate[T](list: List[T]): List[T] =
+    P12.decode(list map ((2, _)))
 
 }
 
 object P15 {
 
-  def duplicateN[T](n: Int, list: List[T]) =
-    P12.decode(list map (n, _))
+  def duplicateN[T](n: Int, list: List[T]): List[T] =
+    P12.decode(list map ((n, _)))
 
 }
 
 object P16 {
 
-  def drop[T](n: Int, list: List[T], j: Int = n - 1, acc: List[T] = Nil) =
+  private def drop[T](n: Int, list: List[T], j: Int, acc: List[T]): List[T] =
     (j, list) match {
       case (_, Nil) => P05.reverse(acc)
       case (0, x :: rest) => drop(n, rest, n - 1, acc)
       case (_, x :: rest) => drop(n, rest, j - 1, x :: acc)
     }
+
+  def drop[T](n: Int, list: List[T]): List[T] = drop(n, list, n - 1, Nil)
 
 }
 
@@ -195,7 +197,7 @@ object P17 {
 
 object P18 {
 
-  def slice[T](i: Int, j: Int, list: List[T], acc: List[T] = Nil) =
+  def slice[T](i: Int, j: Int, list: List[T], acc: List[T] = Nil): List[T] =
     if (i > 0)
       slice(i - 1, j - 1, list.tail, acc)
     else if (j > 0)
@@ -208,22 +210,24 @@ object P18 {
 object P19 {
 
   def rotate[T](n: Int, list: List[T]) =
-    ((a: List[T], b: List[T]) => b ::: a)(P17.split(n))
+    ((a: List[T], b: List[T]) => b ::: a) tupled P17.split(n, list)
 
 }
 
 object P20 {
 
-  def removeAt[T](index: Int, list: List[T]) = P17.split(index) match {
-    case (a, b) => (a ::: b.tail, b.head)
+  def removeAt[T](index: Int, list: List[T]) = P17.split(index, list) match {
+    case (a, x :: b) => (a ::: b, x)
+    case _ => sys.error("index out of bounds")
   }
 
 }
 
 object P21 {
 
-  def insertAt[T](e: T, index: Int, list: List[T]) =
-    (_ ::: e :: _)(P17.split(index))
+  def insertAt[T](e: T, index: Int, list: List[T]) = P17.split(index, list) match {
+    case (a, b) => a ::: e :: b
+  }
 
 }
 
@@ -251,14 +255,14 @@ object P23 {
 object P24 {
 
   def lotto(n: Int, m: Int) =
-    randomSelect(n, P22.range(1, m))
+    P23.randomSelect(n, P22.range(1, m))
 
 }
 
 object P25 {
 
   def randomPermute[T](list: List[T]) =
-    P23.randomSelect(list, P04.count(list))
+    P23.randomSelect(P04.count(list), list)
 
 }
 
@@ -267,7 +271,7 @@ object P26 {
   def combination[T](n: Int, list: List[T]): List[List[T]] = (n, list) match {
     case (0, _) | (_, Nil) => Nil
     case (n, x :: rest) =>
-      combination(n - 1, rest) map (x :: _) ::: combination(n, rest)
+      (combination(n - 1, rest) map (x :: _)) ::: combination(n, rest)
   }
 
 }
