@@ -42,19 +42,19 @@ object P02 {
 
 object P03 {
 
-  def elementAt[T](list: List[T], index: Int): T =
+  def nth[T](list: List[T], index: Int): T =
     if (index < 0)
       list.head
     else
-      elementAt(list.tail, index - 1)
+      nth(list.tail, index - 1)
 
 }
 
 object P04 {
 
-  def count[T](list: List[T], acc: Int = 0): Int = list match {
+  def length[T](list: List[T], acc: Int = 0): Int = list match {
     case Nil => acc
-    case _ :: rest => count(rest, acc + 1)
+    case _ :: rest => length(rest, acc + 1)
   }
 
 }
@@ -112,7 +112,7 @@ object P10 {
   def incr[T] = (i: Int, x: T) => (i + 1, x)
 
   def encode[T](list: List[T], acc: List[(Int, T)] = Nil) =
-    P09.pack(list).map(x => (P04.count(x), x.head))
+    P09.pack(list).map(x => (P04.length(x), x.head))
 
 }
 
@@ -242,7 +242,7 @@ object P22 {
 object P23 {
 
   def randomSelect[T](n: Int, list: List[T], rnd: Random = new Random, acc: List[T] = Nil): List[T] = {
-    val index = rnd.nextInt(P04.count(list))
+    val index = rnd.nextInt(P04.length(list))
     val rem = P20.removeAt(index, list)
     if (n > 0)
       randomSelect(n - 1, rem._1, rnd, rem._2 :: acc)
@@ -261,7 +261,7 @@ object P24 {
 object P25 {
 
   def randomPermute[T](list: List[T]) =
-    P23.randomSelect(P04.count(list), list)
+    P23.randomSelect(P04.length(list), list)
 
 }
 
