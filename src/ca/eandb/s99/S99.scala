@@ -15,6 +15,7 @@ object Common {
 
   def isEqual[T](a: List[T], b: List[T]): Boolean = (a, b) match {
     case (x :: resta, y :: restb) if x == y => isEqual(resta, restb)
+    case (Nil, Nil) => true
     case _ => false
   }
 
