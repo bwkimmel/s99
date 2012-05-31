@@ -42,11 +42,11 @@ object P02 {
 
 object P03 {
 
-  def nth[T](list: List[T], index: Int): T =
+  def nth[T](index: Int, list: List[T]): T =
     if (index < 0)
       list.head
     else
-      nth(list.tail, index - 1)
+      nth(index - 1, list.tail)
 
 }
 
