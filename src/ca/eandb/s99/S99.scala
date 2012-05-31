@@ -11,6 +11,7 @@ package ca.eandb.s99
 import scala.util.Random
 import ca.eandb.s99.Common._
 import java.util.NoSuchElementException
+import javax.management.remote.rmi._RMIConnection_Stub
 
 object Common {
 
@@ -292,10 +293,8 @@ object P28 {
     lists.zip(lists map { x => P04.length(x) }).sortBy(_._2).map(_._1)
 
   def lsortFreq[T](lists: List[List[T]]): List[List[T]] = {
-    val lenths = lists map { x => P04.length(x) }
-    val freq = Map(
-      P10.encode(lengths sorted) map {
-        case (f, l) => (l, f) }:_*)
+    val lengths = lists map { x => P04.length(x) }
+    val freq = Map(P10.encode(lengths sorted) map (_.swap):_*)
     (lists zip lengths sortBy { case (_, len) => freq(len) }).map(_._1)
   }
 
