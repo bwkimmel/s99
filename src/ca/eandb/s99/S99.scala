@@ -11,7 +11,6 @@ package ca.eandb.s99
 import scala.util.Random
 import ca.eandb.s99.Common._
 import java.util.NoSuchElementException
-import javax.management.remote.rmi._RMIConnection_Stub
 
 object Common {
 
