@@ -32,11 +32,10 @@ object P01 {
 
 object P02 {
 
-  def butLast[T](list: List[T]): List[T] = list match {
-    case Nil => Nil
-    case tail @ (x :: Nil) => tail
-    case tail @ (x :: y :: Nil) => tail
-    case x :: rest => butLast(rest)
+  def penultimate[T](list: List[T]): T = list match {
+    case x :: _ :: Nil => x
+    case x :: rest => penultimate(rest)
+    case _ => sys.error("not enough elements")
   }
 
 }
