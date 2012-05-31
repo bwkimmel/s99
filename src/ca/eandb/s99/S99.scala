@@ -78,7 +78,7 @@ object P06 {
 object P07 {
 
   def flatten[T](list: List[Any], acc: List[Any] = Nil): List[Any] = list match {
-    case Nil => acc
+    case Nil => P05.reverse(acc)
     case (x: List[Any]) :: rest => flatten(rest, flatten(x) ::: acc)
     case x :: rest => flatten(rest, x :: acc)
   }
