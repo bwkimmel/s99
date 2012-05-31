@@ -264,3 +264,24 @@ object P26 {
   }
 
 }
+
+object P27 {
+
+  def partitions[T](n: Int, list: List[T]): List[(List[T], List[T])] = (n, list) match {
+    case (0, _) => (Nil, list) :: Nil
+    case (_, Nil) => Nil
+    case (_, x :: rest) =>
+      (partitions(n - 1, rest) map { case (a, b) => (x :: a, b) }) :::
+        (partitions(n, rest) map { case (a, b) => (a, x :: b) })
+  }
+
+  def group[T](n: List[Int], list: List[T]): List[List[List[T]]] =
+    n match {
+      case Nil => Nil :: Nil
+      case n1 :: rest =>
+        partitions(n1, list) flatMap {
+          case (a, b) => group(rest, b) map (a :: _) } }
+
+  def group3[T](list: List[T]) = group(List(3, 3, 3), list)
+
+}
