@@ -43,10 +43,9 @@ object P02 {
 object P03 {
 
   def nth[T](index: Int, list: List[T]): T =
-    if (index < 0)
-      list.head
-    else
+    if (index > 0)
       nth(index - 1, list.tail)
+    else list head
 
 }
 
@@ -62,7 +61,7 @@ object P04 {
 object P05 {
 
   def reverse[T](list: List[T], acc: List[T] = Nil): List[T] = list match {
-    case Nil => Nil
+    case Nil => acc
     case x :: rest => reverse(rest, x :: acc)
   }
 
