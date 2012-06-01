@@ -65,6 +65,6 @@ object S99Int {
 
   /** P39 */
   def listPrimesInRange(r: Range) =
-    (primes dropWhile (_ < r.start) takeWhile (_ < r.end) filter r.contains).toList
+    (primes dropWhile (_ < r.start) takeWhile (_ <= r.end) filter r.contains).toList
 
 }
