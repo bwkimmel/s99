@@ -1,5 +1,7 @@
 package ca.eandb.s99
 
+import collection.immutable.Stream._
+
 /**
  * Created with IntelliJ IDEA.
  * User: brad
@@ -13,15 +15,10 @@ case class S99Int(n: Int) {
   import S99Int._
   import scala.math._
 
-  /** P31 */
   def divides(m: Int): Boolean = (m % n == 0)
 
-  def isDivisibleByAtMost(k: Int): Boolean =
-    if (k > 1)
-      (k divides n) || isDivisibleByAtMost(k - 1)
-    else false
-
-  def isPrime = !isDivisibleByAtMost(sqrt(n).toInt)
+  /** P31 */
+  def isPrime = (n > 1) && (primes takeWhile (_ < sqrt(n)) forall (n % _ != 0))
 
   /** P33 */
   def isCoprimeTo(m: Int) = (gcd(n, m) == 1)
@@ -29,12 +26,21 @@ case class S99Int(n: Int) {
   /** P34 */
   def totient = (1 to n) count isCoprimeTo
 
+  /** P35 */
+  def primeFactors: List[Int] =
+    if (n > 1) {
+      val p = (primes find (_ divides n) get)
+      p :: (n / p).primeFactors
+    } else Nil
+
 }
 
 object S99Int {
 
   implicit def s99Int2Int(obj: S99Int): Int = obj.n
   implicit def int2s99Int(n: Int): S99Int = S99Int(n)
+
+  val primes: Stream[Int] = cons(2, from(3, 2) filter (_.isPrime))
 
   /** P32 */
   def gcd(a: Int, b: Int): Int =
