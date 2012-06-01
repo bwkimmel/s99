@@ -63,4 +63,8 @@ object S99Int {
       gcd(a - b, b)
     else a
 
+  /** P39 */
+  def listPrimesInRange(r: Range) =
+    (primes dropWhile (_ < r.start) takeWhile (_ < r.end) filter r.contains).toList
+
 }
