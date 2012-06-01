@@ -33,6 +33,9 @@ case class S99Int(n: Int) {
       p :: (n / p).primeFactors
     } else Nil
 
+  /** P36 */
+  def primeFactorMultiplicity = P10.encode(primeFactors) map (_.swap)
+
 }
 
 object S99Int {
