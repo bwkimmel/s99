@@ -26,6 +26,9 @@ case class S99Int(n: Int) {
   /** P33 */
   def isCoprimeTo(m: Int) = (gcd(n, m) == 1)
 
+  /** P34 */
+  def totient = (1 to n) count isCoprimeTo
+
 }
 
 object S99Int {
