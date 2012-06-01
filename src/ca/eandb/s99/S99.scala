@@ -44,10 +44,10 @@ object P02 {
 
 object P03 {
 
-  def nth[T](index: Int, list: List[T]): T =
-    if (index > 0)
-      nth(index - 1, list.tail)
-    else list head
+  def nth[T](index: Int, list: List[T]): T = (index, list) match {
+    case (0, x :: _) => x
+    case (_, _ :: rest) => nth(index - 1, rest)
+  }
 
 }
 
