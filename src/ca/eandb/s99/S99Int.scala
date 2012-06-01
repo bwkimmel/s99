@@ -11,16 +11,17 @@ package ca.eandb.s99
 case class S99Int(n: Int) {
 
   import S99Int._
-
-  def divides(m: Int): Boolean = (m % n == 0)
+  import scala.math._
 
   /** P31 */
+  def divides(m: Int): Boolean = (m % n == 0)
+
   def isDivisibleByAtMost(k: Int): Boolean =
     if (k > 1)
       (k divides n) || isDivisibleByAtMost(k - 1)
     else false
 
-  def isPrime = !isDivisibleByAtMost(n - 1)
+  def isPrime = !isDivisibleByAtMost(sqrt(n))
 
 }
 
