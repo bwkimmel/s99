@@ -30,4 +30,12 @@ object S99Int {
   implicit def s99Int2Int(obj: S99Int): Int = obj.n
   implicit def int2s99Int(n: Int): S99Int = S99Int(n)
 
+  /** P32 */
+  def gcd(a: Int, b: Int): Int =
+    if (a < b)
+      gcd(a, b - a)
+    else if (a > b)
+      gcd(a - b, b)
+    else a
+
 }
