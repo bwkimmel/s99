@@ -36,6 +36,16 @@ case class S99Int(n: Int) {
   /** P36 */
   def primeFactorMultiplicity = P10.encode(primeFactors) map (_.swap)
 
+  /** P37 */
+  def totientImproved = {
+    def phi(factors: List[(Int, Int)], acc: Int = 1): Int = factors match {
+      case (p, 1) :: rest => phi(rest, (p - 1) * acc)
+      case (p, m) :: rest => phi((p, m - 1) :: rest, p * acc)
+      case Nil => acc
+    }
+    phi(primeFactorMultiplicity)
+  }
+
 }
 
 object S99Int {
