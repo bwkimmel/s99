@@ -21,7 +21,7 @@ case class S99Int(n: Int) {
       (k divides n) || isDivisibleByAtMost(k - 1)
     else false
 
-  def isPrime = !isDivisibleByAtMost(sqrt(n))
+  def isPrime = !isDivisibleByAtMost(sqrt(n).toInt)
 
 }
 
