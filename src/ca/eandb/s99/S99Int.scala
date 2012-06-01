@@ -10,6 +10,23 @@ package ca.eandb.s99
 
 case class S99Int(n: Int) {
 
-  implicit def int2s99Int(n: Int) = S99Int(n)
+  import S99Int._
+
+  def divides(m: Int): Boolean = (m % n == 0)
+
+  /** P31 */
+  def isDivisibleByAtMost(k: Int): Boolean =
+    if (k > 1)
+      (k divides n) || isDivisibleByAtMost(k - 1)
+    else false
+
+  def isPrime = !isDivisibleByAtMost(n - 1)
+
+}
+
+object S99Int {
+
+  implicit def s99Int2Int(obj: S99Int): Int = obj.n
+  implicit def int2s99Int(n: Int): S99Int = S99Int(n)
 
 }
