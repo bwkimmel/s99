@@ -23,6 +23,9 @@ case class S99Int(n: Int) {
 
   def isPrime = !isDivisibleByAtMost(sqrt(n).toInt)
 
+  /** P33 */
+  def isCoprimeTo(m: Int) = (gcd(n, m) == 1)
+
 }
 
 object S99Int {
