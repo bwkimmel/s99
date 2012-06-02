@@ -46,4 +46,15 @@ object S99Logic {
     } foreach println
   }
 
+  /** P49 */
+  def gray(n: Int): List[String] = {
+    def grayBool(n: Int): List[List[Boolean]] = n match {
+      case 1 => List(List(false), List(true))
+      case _ => grayBool(n - 1) flatMap { x =>
+        List((false xor x.head) :: x, (true xor x.head) :: x)
+      }
+    }
+    grayBool(n) map (_.reverse map (if (_) '1' else '0')) map (_ mkString)
+  }
+
 }
