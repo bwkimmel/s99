@@ -9,8 +9,9 @@ package ca.eandb.s99
  */
 
 import scala.util.Random
-import ca.eandb.s99.Common._
 import java.util.NoSuchElementException
+
+import Util._
 
 object P01 {
 
