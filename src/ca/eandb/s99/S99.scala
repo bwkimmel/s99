@@ -12,16 +12,6 @@ import scala.util.Random
 import ca.eandb.s99.Common._
 import java.util.NoSuchElementException
 
-object Common {
-
-  def isEqual[T](a: List[T], b: List[T]): Boolean = (a, b) match {
-    case (x :: resta, y :: restb) if x == y => isEqual(resta, restb)
-    case (Nil, Nil) => true
-    case _ => false
-  }
-
-}
-
 object P01 {
 
   def last[T](list: List[T]): T = list match {
