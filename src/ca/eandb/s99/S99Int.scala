@@ -16,9 +16,10 @@ case class S99Int(n: Int) {
   import scala.math._
 
   def divides(m: Int): Boolean = (m % n == 0)
+  def in(r: Range) = r contains n
 
   /** P31 */
-  def isPrime = (n > 1) && (primes takeWhile (_ < sqrt(n)) forall (n % _ != 0))
+  def isPrime = (n > 1) && (primes takeWhile (_ <= sqrt(n)) forall (n % _ != 0))
 
   /** P33 */
   def isCoprimeTo(m: Int) = (gcd(n, m) == 1)
@@ -46,9 +47,17 @@ case class S99Int(n: Int) {
     phi(primeFactorMultiplicity)
   }
 
+  /** P40 */
+  def goldbach =
+    listPrimesInRange(2 to n / 2) collectFirst {
+      case p if (n - p) isPrime => (p, n - p)
+    } get
+
 }
 
 object S99Int {
+
+  import Util._
 
   implicit def s99Int2Int(obj: S99Int): Int = obj.n
   implicit def int2s99Int(n: Int): S99Int = S99Int(n)
@@ -66,5 +75,17 @@ object S99Int {
   /** P39 */
   def listPrimesInRange(r: Range) =
     (primes dropWhile (_ < r.start) takeWhile (_ <= r.end) filter r.contains).toList
+
+  /** P40 */
+  def printGoldbachList(range: Range) = printGoldbachListLimited(range, 3)
+
+  /** P41 */
+  def printGoldbachListLimited(range: Range, k: Int) = {
+    val p = listPrimesInRange(k to range.end - k)
+    cartesian(p :: p :: Nil).
+      groupBy(_ sum).mapValues(_ head).toList.sortBy(_ _1).collect {
+      case (sum, x :: y :: Nil) if sum in range => "%d = %d + %d".format(sum, x, y)
+    } foreach println
+  }
 
 }
