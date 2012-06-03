@@ -58,6 +58,14 @@ sealed abstract class Tree[+T] {
     case Node(_, a, b) => a.leafCount + b.leafCount
   }
 
+  /** P61A */
+  private def rake[U >: T](acc: List[U] = Nil): List[U] = this match {
+    case End => acc
+    case Node(x, End, End) => x :: acc
+    case Node(_, a, b) => a rake (b rake acc)
+  }
+  def leafList: List[T] = rake()
+
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
