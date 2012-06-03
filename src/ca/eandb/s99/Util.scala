@@ -10,7 +10,10 @@ package ca.eandb.s99
 
 object Util {
 
-  def powi(b: Int, e: Int) = (1 to e) map (x => b) product
+  def powi(b: Int, e: Int) =
+    if (e >= 0)
+      (1 to e) map (x => b) product
+    else 0
 
   def isEqual[T](a: List[T], b: List[T]): Boolean = (a, b) match {
     case (x :: resta, y :: restb) if x == y => isEqual(resta, restb)
@@ -25,7 +28,6 @@ object Util {
 
   def cartesian[A, B](a: List[A], b: List[B]): List[(A, B)] =
     a flatMap (x => b map (y => (x, y)))
-
 
   implicit def f2Option[A, B](f: A => B): A => Option[B] =
     x => Some(f(x))

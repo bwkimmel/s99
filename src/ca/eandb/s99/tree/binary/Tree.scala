@@ -14,6 +14,8 @@ import Util._
 
 sealed abstract class Tree[+T] {
 
+  def shift(dx: Int, dy: Int) = this
+
   def size: Int = this match {
     case End => 0
     case Node(_, a, b) => 1 + a.size + b.size
@@ -90,6 +92,24 @@ sealed abstract class Tree[+T] {
   }
   def layoutBinaryTree: Tree[T] = layoutBinaryTree(1, 1)._1
 
+  /** P65 */
+  private def layoutBinaryTree2(x: Int, y: Int, dx: Int): Tree[T] = this match {
+    case End => End
+    case Node(value, left, right) =>
+      val lp = left.layoutBinaryTree2(x - dx, y + 1, dx / 2)
+      val rp = right.layoutBinaryTree2(x + dx, y + 1, dx / 2)
+      PositionedNode(value, lp, rp, x, y)
+  }
+  def layoutBinaryTree2: Tree[T] = {
+    val h = height
+    val lh = (iterate(this) (_ match {
+      case Node(_, l, _) => Some(l)
+      case _ => None
+    })).length
+    val x = powi(2, h - 1) - powi(2, h - lh - 1)
+    layoutBinaryTree2(x, 1, powi(2, h - 2))
+  }
+
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
@@ -102,6 +122,10 @@ case class PositionedNode[+T](
                                override val right: Tree[T],
                                x: Int, y: Int)
   extends Node[T](value, left, right) {
+
+  override def shift(dx: Int, dy: Int) =
+    PositionedNode(value, left.shift(dx, dy), right.shift(dx, dy), x + dx, y + dy)
+
   override def toString = "T[%d,%d](%s %s %s)".format(x, y, value, left, right)
 }
 
