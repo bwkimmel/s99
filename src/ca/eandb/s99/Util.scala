@@ -26,4 +26,14 @@ object Util {
     case None => Stream.empty
   }
 
+  object Twice {
+    def apply(n: Int) = 2 * n
+    def unapply(n: Int) = if (n % 2 == 0) Some(n / 2) else None
+  }
+
+  object TwicePlusOne {
+    def apply(n: Int) = 2 * n + 1
+    def unapply(n: Int) = if (n % 2 == 1) Some((n - 1) / 2) else None
+  }
+
 }
