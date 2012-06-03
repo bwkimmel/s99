@@ -72,7 +72,7 @@ object S99Logic {
         case (l, r) => codes(l, prefix :+ '0', codes(r, prefix :+ '1', acc))
         case x: T => (x, prefix) :: acc
       }
-    val heap = Heap.empty ++ (freq map (x => Freq(x._1, x._2)))
+    val heap = Heap.Empty ++ (freq map (x => Freq(x._1, x._2)))
     codes(build(heap))
   }
 

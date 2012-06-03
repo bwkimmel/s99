@@ -2,6 +2,7 @@ package ca.eandb.s99
 
 import collection.GenTraversableOnce
 import Util._
+import ca.eandb.s99.Heap.Empty
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,7 +22,7 @@ sealed abstract class Heap[+T <% Ordered[T]] {
   }
 
   def +[T1 >: T <% Ordered[T1]](value: T1): Heap[T1] = this match {
-    case Heap.empty => Heap(value)
+    case Empty => Heap(value)
     case Heap(x, left, right) if left.size < right.size =>
       Heap(x, left + value, right) match {
         case Heap(y, Heap(z, a, b), r) if z < y => Heap(z, Heap(y, a, b), r)
@@ -39,13 +40,13 @@ sealed abstract class Heap[+T <% Ordered[T]] {
   }
 
   def dequeue: Heap[T] = this match {
-    case Heap(_, Heap.empty, Heap.empty) => Heap.empty
+    case Heap(_, Empty, Empty) => Empty
     case Heap(value, Heap(x, a, b), h @ Heap(y, _, _)) if x < y =>
       Heap(x, Heap(value, a, b) dequeue, h)
     case Heap(value, h @ Heap(x, _, _), Heap(y, a, b)) =>
       Heap(y, h, Heap(value, a, b) dequeue)
-    case Heap(_, h @ Heap(_, _, _), Heap.empty) => h
-    case Heap(_, Heap.empty, h @ Heap(_, _, _)) => h
+    case Heap(_, h @ Heap(_, _, _), Empty) => h
+    case Heap(_, Empty, h @ Heap(_, _, _)) => h
   }
 
   def toStream = unfold(this) { _ match {
@@ -64,12 +65,12 @@ object Heap {
     val size = 1 + left.size + right.size
   }
 
-  object empty extends Heap[Nothing] {
+  case object Empty extends Heap[Nothing] {
     override def toString = "Leaf"
     val size = 0
   }
 
-  def apply[T <% Ordered[T]](value: T): Heap[T] = Heap(value, Heap.empty, Heap.empty)
+  def apply[T <% Ordered[T]](value: T): Heap[T] = Heap(value, Empty, Empty)
   def apply[T <% Ordered[T]](value: T, left: Heap[T], right: Heap[T]): Heap[T] =
     Internal(value, left, right)
 
