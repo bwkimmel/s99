@@ -54,6 +54,28 @@ object S99Logic {
       (tail map ('0' +)) ::: (tail.reverse map ('1' +))
   }
 
+  /** P50 */
+  def huffman[T](freq: List[(T, Int)]) = {
+    case class Freq(tree: Any, weight: Int) extends Ordered[Freq] {
+      override def compare(that: Freq) = weight compare that.weight
+    }
+    def build(heap: Heap[Freq]): Any =
+      if (heap.size > 1) {
+        val heap1 = heap.dequeue
+        val heap2 = heap1.dequeue
+        val a = heap.top
+        val b = heap1.top
+        build(heap2 + Freq((a.tree, b.tree), a.weight + b.weight))
+      } else heap.top.tree
+    def codes(tree: Any, prefix: String = "", acc: List[(T, String)] = Nil): List[(T, String)] =
+      tree match {
+        case (l, r) => codes(l, prefix :+ '0', codes(r, prefix :+ '1', acc))
+        case x: T => (x, prefix) :: acc
+      }
+    val heap = Heap.empty ++ (freq map (x => Freq(x._1, x._2)))
+    codes(build(heap))
+  }
+
   def huffman(lengths: List[Int], acc: List[String] = Nil): List[String] = {
     implicit def seq2String(s: Seq[Char]): String = s.mkString
     def incr(seed: String): (String, Boolean) = (seed: Seq[Char]) match {
