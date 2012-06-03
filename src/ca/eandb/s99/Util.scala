@@ -24,8 +24,19 @@ object Util {
   def cartesian[A, B](a: List[A], b: List[B]): List[(A, B)] =
     a flatMap (x => b map (y => (x, y)))
 
+
+  implicit def f2Option[A, B](f: A => B): A => Option[B] =
+    x => Some(f(x))
+
+  implicit def t2Option[T](x: T): Option[T] = Some(x)
+
   def unfold[A, B](x: A)(f: A => Option[(B, A)]): Stream[B] = f(x) match {
     case Some((e, y)) => Stream.cons(e, unfold(y)(f))
+    case None => Stream.empty
+  }
+
+  def iterate[A](x: A)(f: A => Option[A]): Stream[A] = f(x) match {
+    case Some(y) => Stream.cons(x, iterate(y)(f))
     case None => Stream.empty
   }
 

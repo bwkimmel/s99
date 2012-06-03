@@ -89,4 +89,17 @@ object Tree {
       bal ::: lop
   }
 
+  /** P60 */
+  def minHbalNodes(h: Int, acc: (Int, Int) = (0, 0)): Int = (h, acc) match {
+    case (0, (n, _)) => n
+    case (_, (n, m)) => minHbalNodes(h - 1, (1 + n + m, n))
+  }
+
+  def maxHbalHeight(n: Int) = {
+    def next(x: (Int, Int)): (Int, Int) = x match { case (n, m) => (1 + n + m, n) }
+    iterate((0, 0))(next).zipWithIndex.collectFirst {
+      case ((k, _), h) if k > n => h - 1
+    } get
+  }
+
 }
