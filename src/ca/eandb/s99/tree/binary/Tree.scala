@@ -66,6 +66,13 @@ sealed abstract class Tree[+T] {
   }
   def leafList = rake()
 
+  /** P62 */
+  private def collectInternal[U >: T](acc: List[U] = Nil): List[U] = this match {
+    case End | Node(_, End, End) => acc
+    case Node(x, a, b) => x :: (a collectInternal (b collectInternal acc))
+  }
+  def internalList = collectInternal()
+
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
