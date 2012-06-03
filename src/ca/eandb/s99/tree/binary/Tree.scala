@@ -80,10 +80,29 @@ sealed abstract class Tree[+T] {
     case _ => acc
   }
 
+  /** P64 */
+  private def layoutBinaryTree(x: Int, y: Int): (Tree[T], Int) = this match {
+    case End => (End, 0)
+    case Node(value, left, right) =>
+      val lp = left.layoutBinaryTree(x, y + 1)
+      val rp = right.layoutBinaryTree(x + lp._2 + 1, y + 1)
+      (PositionedNode(value, lp._1, rp._1, x + lp._2, y), 1 + lp._2 + rp._2)
+  }
+  def layoutBinaryTree: Tree[T] = layoutBinaryTree(1, 1)._1
+
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
   override def toString = "T(%s %s %s)".format(value, left, right)
+}
+
+case class PositionedNode[+T](
+                               override val value: T,
+                               override val left: Tree[T],
+                               override val right: Tree[T],
+                               x: Int, y: Int)
+  extends Node[T](value, left, right) {
+  override def toString = "T[%d,%d](%s %s %s)".format(x, y, value, left, right)
 }
 
 case object End extends Tree[Nothing] {
