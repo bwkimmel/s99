@@ -15,17 +15,17 @@ import Util._
 sealed abstract class Tree[+T] {
 
   def size: Int = this match {
-    case Leaf => 0
+    case End => 0
     case Node(_, a, b) => 1 + a.size + b.size
   }
 
   def height: Int = this match {
-    case Leaf => 0
+    case End => 0
     case Node(_, a, b) => 1 + max(a height, b height)
   }
 
   def isHeightBalanced: Boolean = this match {
-    case Leaf => true
+    case End => true
     case Node(_, a, b) => a.isHeightBalanced && b.isHeightBalanced &&
       abs(a.height - b.height) < 2
   }
@@ -33,19 +33,19 @@ sealed abstract class Tree[+T] {
   def isMirrorOf(t: Tree[Any]): Boolean = (this, t) match {
     case (Node(_, a1, b1), Node(_, b2, a2)) =>
       (a1 isMirrorOf a2) && (b1 isMirrorOf b2)
-    case (Leaf, Leaf) => true
+    case (End, End) => true
     case _ => false
   }
 
   /** P56 */
   def isSymmetric = this match {
-    case Leaf => true
+    case End => true
     case Node(_, a, b) => a isMirrorOf b
   }
 
   /** P57 */
   def addValue[U >: T <% Ordered[U]](value: U): Tree[U] = (value, this) match {
-    case (x, Leaf) => Node(x)
+    case (x, End) => Node(x)
     case (x, n @ Node(y, _, _)) if x == y => n
     case (x, Node(y, l, r)) if x < y => Node(y, l.addValue(x), r)
     case (x, Node(y, l, r)) => Node(y, l, r.addValue(x))
@@ -57,19 +57,19 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
   override def toString = "T(%s %s %s)".format(value, left, right)
 }
 
-case object Leaf extends Tree[Nothing] {
+case object End extends Tree[Nothing] {
   override def toString = "."
 }
 
 object Node {
-  def apply[T](value: T): Node[T] = Node(value, Leaf, Leaf)
+  def apply[T](value: T): Node[T] = Node(value, End, End)
 }
 
 object Tree {
 
   /** P55 */
   def cBalanced[T](n: Int, value: T): List[Tree[T]] = n match {
-    case 0 => Leaf :: Nil
+    case 0 => End :: Nil
     case 1 => Node(value) :: Nil
     case TwicePlusOne(k) =>
       val ts = cBalanced(k, value)
@@ -84,7 +84,7 @@ object Tree {
 
   /** P57 (Part 2) */
   def fromList[T <% Ordered[T]](list: List[T]): Tree[T] =
-    (Leaf.asInstanceOf[Tree[T]] /: list)(_ addValue _)
+    (End.asInstanceOf[Tree[T]] /: list)(_ addValue _)
 
   /** P58 */
   def symmetricBalancedTrees[T](n: Int, value: T) =
@@ -92,7 +92,7 @@ object Tree {
 
   /** P59 */
   def hbalTrees[T](h: Int, value: T): List[Tree[T]] = h match {
-    case 0 => Leaf :: Nil
+    case 0 => End :: Nil
     case 1 => Node(value) :: Nil
     case _ =>
       val t0 = hbalTrees(h - 1, value)
