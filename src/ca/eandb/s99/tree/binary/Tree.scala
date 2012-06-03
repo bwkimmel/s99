@@ -80,9 +80,13 @@ object Tree {
     case _ =>
       val t0 = hbalTrees(h - 1, value)
       val t1 = hbalTrees(h - 2, value)
-      cartesian(t0, t1) flatMap {
+      val bal = cartesian(t0, t0) map {
+        case (a, b) => Node(value, a, b)
+      }
+      val lop = cartesian(t0, t1) flatMap {
         case (a, b) => Node(value, a, b) :: Node(value, b, a) :: Nil
       }
+      bal ::: lop
   }
 
 }
