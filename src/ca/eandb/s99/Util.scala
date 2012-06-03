@@ -10,6 +10,8 @@ package ca.eandb.s99
 
 object Util {
 
+  def powi(b: Int, e: Int) = (1 to e) map (x => b) product
+
   def isEqual[T](a: List[T], b: List[T]): Boolean = (a, b) match {
     case (x :: resta, y :: restb) if x == y => isEqual(resta, restb)
     case (Nil, Nil) => true

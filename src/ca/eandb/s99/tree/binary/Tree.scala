@@ -161,4 +161,23 @@ object Tree {
   def hbalTreesWithNodes[T](n: Int, value: T): List[Tree[T]] =
     minHbalHeight(n) to maxHbalHeight(n) flatMap (hbalTrees(_, value)) filter (_.size == n) toList
 
+  /** P63 */
+  private def completeBinaryTree[T](h: Int, r: Int, value: T): Tree[T] = (h, r) match {
+    case (0, _) | (1, 0) => End
+    case _ =>
+      val a: Int = min(r, powi(2, h - 2))
+      val b: Int = r - a
+      Node(value,
+        completeBinaryTree(h - 1, a, value),
+        completeBinaryTree(h - 1, b, value))
+  }
+
+  def completeBinaryTree[T](n: Int, value: T): Tree[T] = {
+    val h = minHbalHeight(n)
+    val r = n - maxHbalNodes(h - 1)
+    completeBinaryTree(h, r, value)
+  }
+
+
+
 }
