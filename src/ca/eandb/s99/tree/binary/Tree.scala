@@ -31,7 +31,11 @@ object Tree {
   def cBalanced[T](n: Int, value: T): List[Tree[T]] = n match {
     case 0 => Leaf :: Nil
     case 1 => Node(value) :: Nil
-    case TwicePlusOne(k) => cBalanced(k, value) map (t => Node(value, t, t))
+    case TwicePlusOne(k) =>
+      val ts = cBalanced(k, value)
+      cartesian(ts :: ts :: Nil) flatMap {
+        case l :: r :: Nil => Node(value, l, r) :: Nil
+      }
     case Twice(k) =>
       cartesian(cBalanced(k, value) :: cBalanced(k - 1, value) :: Nil) flatMap {
         case l :: r :: Nil => Node(value, l, r) :: Node(value, r, l) :: Nil
