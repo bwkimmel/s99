@@ -26,6 +26,14 @@ sealed abstract class Tree[+T] {
     case Node(_, a, b) => a isMirrorOf b
   }
 
+  /** P57 */
+  def addValue[U >: T <% Ordered[U]](value: U): Tree[U] = (value, this) match {
+    case (x, Leaf) => Node(x)
+    case (x, n @ Node(y, _, _)) if x == y => n
+    case (x, Node(y, l, r)) if x < y => Node(y, l.addValue(x), r)
+    case (x, Node(y, l, r)) => Node(y, l, r.addValue(x))
+  }
+
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
@@ -56,5 +64,9 @@ object Tree {
         case (l, r) => Node(value, l, r) :: Node(value, r, l) :: Nil
       }
   }
+
+  /** P57 (Part 2) */
+  def fromList[T <% Ordered[T]](list: List[T]): Tree[T] =
+    (Leaf.asInstanceOf[Tree[T]] /: list)(_ addValue _)
 
 }
