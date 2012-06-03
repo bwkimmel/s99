@@ -51,6 +51,13 @@ sealed abstract class Tree[+T] {
     case (x, Node(y, l, r)) => Node(y, l, r.addValue(x))
   }
 
+  /** P61 */
+  def leafCount: Int = this match {
+    case End => 0
+    case Node(_, End, End) => 1
+    case Node(_, a, b) => a.leafCount + b.leafCount
+  }
+
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
