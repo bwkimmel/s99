@@ -13,6 +13,11 @@ import Util._
 
 sealed abstract class Tree[+T] {
 
+  def size: Int = this match {
+    case Leaf => 0
+    case Node(_, a, b) => 1 + a.size + b.size
+  }
+
   def isMirrorOf(t: Tree[Any]): Boolean = (this, t) match {
     case (Node(_, a1, b1), Node(_, b2, a2)) =>
       (a1 isMirrorOf a2) && (b1 isMirrorOf b2)
@@ -101,5 +106,18 @@ object Tree {
       case ((k, _), h) if k > n => h - 1
     } get
   }
+
+  def maxHbalNodes(h: Int, acc: Int = 1): Int = h match {
+    case 0 => acc - 1
+    case _ => maxHbalNodes(h - 1, acc * 2)
+  }
+
+  def minHbalHeight(n: Int, acc: Int = 0): Int = n match {
+    case 0 => acc
+    case _ => minHbalHeight(n / 2, acc + 1)
+  }
+
+  def hbalTreesWithNodes[T](n: Int, value: T): List[Tree[T]] =
+    minHbalHeight(n) to maxHbalHeight(n) flatMap (hbalTrees(_, value)) filter (_.size == n) toList
 
 }
