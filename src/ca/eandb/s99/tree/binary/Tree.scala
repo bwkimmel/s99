@@ -73,6 +73,13 @@ sealed abstract class Tree[+T] {
   }
   def internalList = collectInternal()
 
+  /** P62B */
+  def atLevel[U >: T](n: Int, acc: List[U] = Nil): List[U] = (n, this) match {
+    case (1, Node(x, _, _)) => x :: acc
+    case (_, Node(_, a, b)) => a.atLevel(n - 1, b.atLevel(n - 1, acc))
+    case _ => acc
+  }
+
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
