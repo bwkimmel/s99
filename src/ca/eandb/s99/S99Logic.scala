@@ -54,4 +54,26 @@ object S99Logic {
       (tail map ('0' +)) ::: (tail.reverse map ('1' +))
   }
 
+  def huffman(lengths: List[Int], acc: List[String] = Nil): List[String] = {
+    implicit def seq2String(s: Seq[Char]): String = s.mkString
+    def incr(seed: String): (String, Boolean) = (seed: Seq[Char]) match {
+      case Seq() => ("", true)
+      case Seq(c, rest @ _*) => incr(rest) match {
+        case (tail, false) => (c +: tail, false)
+        case (tail, true) if c == '1' => ('0' +: tail, true)
+        case (tail, true) if c == '0' => ('1' +: tail, false)
+      }
+    }
+    (lengths, acc) match {
+      case (n :: rest, Nil) =>
+        huffman(rest, "0" * n :: Nil)
+      case (n :: rest, seed :: _) => incr(seed) match {
+        case (next, false) => huffman(rest, next.padTo(n, '0') :: acc)
+        case (_, true) =>
+          throw new IllegalArgumentException("Invalid Huffman code lengths")
+      }
+      case (Nil, _) => acc reverse
+    }
+  }
+
 }
