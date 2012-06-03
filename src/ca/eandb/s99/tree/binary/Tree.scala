@@ -9,6 +9,7 @@ package tree.binary
  * To change this template use File | Settings | File Templates.
  */
 
+import scala.math._
 import Util._
 
 sealed abstract class Tree[+T] {
@@ -16,6 +17,17 @@ sealed abstract class Tree[+T] {
   def size: Int = this match {
     case Leaf => 0
     case Node(_, a, b) => 1 + a.size + b.size
+  }
+
+  def height: Int = this match {
+    case Leaf => 0
+    case Node(_, a, b) => 1 + max(a height, b height)
+  }
+
+  def isHeightBalanced: Boolean = this match {
+    case Leaf => true
+    case Node(_, a, b) => a.isHeightBalanced && b.isHeightBalanced &&
+      abs(a.height - b.height) < 2
   }
 
   def isMirrorOf(t: Tree[Any]): Boolean = (this, t) match {
