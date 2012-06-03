@@ -82,9 +82,9 @@ object S99Int {
   /** P41 */
   def printGoldbachListLimited(range: Range, k: Int) = {
     val p = listPrimesInRange(k to range.end - k)
-    cartesian(p :: p :: Nil).
-      groupBy(_ sum).mapValues(_ head).toList.sortBy(_ _1).collect {
-      case (sum, x :: y :: Nil) if sum in range => "%d = %d + %d".format(sum, x, y)
+    cartesian(p, p).
+      groupBy(x => x._1 + x._2).mapValues(_ head).toList.sortBy(_ _1).collect {
+      case (sum, (x, y)) if sum in range => "%d = %d + %d".format(sum, x, y)
     } foreach println
   }
 

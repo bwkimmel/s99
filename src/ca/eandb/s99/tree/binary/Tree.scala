@@ -33,12 +33,12 @@ object Tree {
     case 1 => Node(value) :: Nil
     case TwicePlusOne(k) =>
       val ts = cBalanced(k, value)
-      cartesian(ts :: ts :: Nil) flatMap {
-        case l :: r :: Nil => Node(value, l, r) :: Nil
+      cartesian(ts, ts) flatMap {
+        case (l, r) => Node(value, l, r) :: Nil
       }
     case Twice(k) =>
-      cartesian(cBalanced(k, value) :: cBalanced(k - 1, value) :: Nil) flatMap {
-        case l :: r :: Nil => Node(value, l, r) :: Node(value, r, l) :: Nil
+      cartesian(cBalanced(k, value), cBalanced(k - 1, value)) flatMap {
+        case (l, r) => Node(value, l, r) :: Node(value, r, l) :: Nil
       }
   }
 

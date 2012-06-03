@@ -41,8 +41,8 @@ object S99Logic {
   def table2(f: (Boolean, Boolean) => Boolean) = {
     println("A     B     result")
     val t = List(true, false)
-    cartesian(t :: t :: Nil) collect {
-      case a :: b :: Nil => "%-5s %-5s %-5s".format(a, b, f(a, b))
+    cartesian(t, t) collect {
+      case (a, b) => "%-5s %-5s %-5s".format(a, b, f(a, b))
     } foreach println
   }
 

@@ -21,6 +21,9 @@ object Util {
     case Nil => Nil :: Nil
   }
 
+  def cartesian[A, B](a: List[A], b: List[B]): List[(A, B)] =
+    a flatMap (x => b map (y => (x, y)))
+
   def unfold[A, B](x: A)(f: A => Option[(B, A)]): Stream[B] = f(x) match {
     case Some((e, y)) => Stream.cons(e, unfold(y)(f))
     case None => Stream.empty
