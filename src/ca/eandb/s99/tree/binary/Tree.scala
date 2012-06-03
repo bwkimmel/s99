@@ -11,7 +11,22 @@ package tree.binary
 
 import Util._
 
-sealed abstract class Tree[+T]
+sealed abstract class Tree[+T] {
+
+  def isMirrorOf(t: Tree[Any]): Boolean = (this, t) match {
+    case (Node(_, a1, b1), Node(_, b2, a2)) =>
+      (a1 isMirrorOf a2) && (b1 isMirrorOf b2)
+    case (Leaf, Leaf) => true
+    case _ => false
+  }
+
+  /** P56 */
+  def isSymmetric = this match {
+    case Leaf => true
+    case Node(_, a, b) => a isMirrorOf b
+  }
+
+}
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
   override def toString = "T(%s %s %s)".format(value, left, right)
