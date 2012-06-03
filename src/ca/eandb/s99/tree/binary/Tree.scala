@@ -69,4 +69,8 @@ object Tree {
   def fromList[T <% Ordered[T]](list: List[T]): Tree[T] =
     (Leaf.asInstanceOf[Tree[T]] /: list)(_ addValue _)
 
+  /** P58 */
+  def symmetricBalancedTrees[T](n: Int, value: T) =
+    cBalanced(n, value) filter (_ isSymmetric)
+
 }
