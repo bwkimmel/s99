@@ -64,7 +64,7 @@ sealed abstract class Tree[+T] {
     case Node(x, End, End) => x :: acc
     case Node(_, a, b) => a rake (b rake acc)
   }
-  def leafList: List[T] = rake()
+  def leafList = rake()
 
 }
 
