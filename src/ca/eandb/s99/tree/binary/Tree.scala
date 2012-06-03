@@ -74,12 +74,12 @@ object Tree {
     cBalanced(n, value) filter (_ isSymmetric)
 
   /** P59 */
-  def hbalTrees[T](n: Int, value: T): List[Tree[T]] = n match {
+  def hbalTrees[T](h: Int, value: T): List[Tree[T]] = h match {
     case 0 => Leaf :: Nil
     case 1 => Node(value) :: Nil
     case _ =>
-      val t0 = hbalTrees(n - 1, value)
-      val t1 = hbalTrees(n - 2, value)
+      val t0 = hbalTrees(h - 1, value)
+      val t1 = hbalTrees(h - 2, value)
       cartesian(t0, t1) flatMap {
         case (a, b) => Node(value, a, b) :: Node(value, b, a) :: Nil
       }
