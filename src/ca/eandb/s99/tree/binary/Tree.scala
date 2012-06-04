@@ -129,7 +129,6 @@ sealed abstract class Tree[+T] {
     }
   private def layoutBinaryTree3WithRange(): (Tree[T], List[(Int, Int)]) = this match {
     case End => (End, Nil)
-    case Node(value, End, End) => (PositionedNode(value, End, End, 0, 1), (0, 0) :: Nil)
     case Node(value, left, right) =>
       val (lp, lr) = left.layoutBinaryTree3WithRange()
       val (rp, rr) = right.layoutBinaryTree3WithRange()
