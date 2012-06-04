@@ -155,6 +155,13 @@ sealed abstract class Tree[+T] {
   }
   def inorder: List[T] = inorder(Nil)
 
+  /** P69 */
+  def toDotString: String = this match {
+    case Node(value, left, right) =>
+      "%s%s%s".format(value, left.toDotString, right.toDotString)
+    case End => "."
+  }
+
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
@@ -305,5 +312,18 @@ object Tree {
       Node(x, preInTree(lpre, lin), preInTree(rpre, rin))
   }
 
+  /** P69 */
+  def parseDotString(s: List[Char]): (Tree[Char], List[Char]) = s match {
+    case Nil => throw new IllegalArgumentException("Invalid tree dot-string")
+    case '.' :: rest => (End, rest)
+    case value :: r0 =>
+      val (left, r1) = parseDotString(r0)
+      val (right, r2) = parseDotString(r1)
+      (Node(value, left, right), r2)
+  }
+  def fromDotString(s: String) = parseDotString(s.toList) match {
+    case (tree, Nil) => tree
+    case _ => throw new IllegalArgumentException("Invalid tree dot-string")
+  }
 
 }
