@@ -23,6 +23,9 @@ case class MTree[+T](value: T, children: List[MTree[T]]) {
   def internalPathLength: Int =
     children.map(c => c.nodeCount + c.internalPathLength).sum
 
+  /** P72 */
+  def postorder: List[T] = children.flatMap(_.postorder) :+ value
+
 }
 
 object MTree {
