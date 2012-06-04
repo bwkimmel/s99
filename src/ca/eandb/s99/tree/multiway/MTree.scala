@@ -60,4 +60,31 @@ object MTree {
     case _ => throw new IllegalArgumentException("Invalid node string")
   }
 
+  private val openp = """^\s*\(\s*(\w+)\b\s*(.*)$""".r
+  private val closep = """^\s*\)\s*(.*)$""".r
+  private val word = """^\s*(\w+)\b\s*(.*)$""".r
+
+  /** P73 */
+  def parseLispMTreeList(s: String, acc: List[MTree[String]] = Nil): (List[MTree[String]], String) =
+    s match {
+      case closep(rest) => (acc.reverse, rest)
+      case _ =>
+        val (child, rest) = parseLispMTree(s)
+        parseLispMTreeList(rest, child :: acc)
+    }
+
+  def parseLispMTree(s: String): (MTree[String], String) = s match {
+    case word(value, rest) => (MTree(value), rest)
+    case openp(value, rest) =>
+      val (children, rest1) = parseLispMTreeList(rest)
+      (MTree(value, children), rest1)
+    case _ => throw new IllegalArgumentException("Parse error")
+  }
+
+  def fromLispExpr(s: String): MTree[String] = parseLispMTree(s) match {
+    case (tree, "") => tree
+    case _ => throw new IllegalArgumentException("Parse error")
+  }
+
+
 }
