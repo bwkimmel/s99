@@ -19,6 +19,10 @@ case class MTree[+T](value: T, children: List[MTree[T]]) {
   override def toString =
     value + children.mkString + "^"
 
+  /** P71 */
+  def internalPathLength: Int =
+    children.map(c => c.nodeCount + c.internalPathLength).sum
+
 }
 
 object MTree {
