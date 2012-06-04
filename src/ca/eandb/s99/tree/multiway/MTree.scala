@@ -11,13 +11,40 @@ package tree.multiway
 
 case class MTree[+T](value: T, children: List[MTree[T]]) {
 
-  override def toString = "M(" + value.toString + " {" + children.map(_.toString).mkString(",") + "})"
-
   /** P70C */
   def nodeCount: Int = 1 + children.map(_.nodeCount).sum
+
+  /** P70 */
+  //  override def toString = "M(" + value.toString + " {" + children.map(_.toString).mkString(",") + "})"
+  override def toString =
+    value + children.mkString + "^"
 
 }
 
 object MTree {
+
   def apply[T](value: T) = new MTree(value, Nil)
+
+  /** P70 */
+  def parseMTreeList(s: List[Char], acc: List[MTree[Char]] = Nil): (List[MTree[Char]], List[Char]) =
+    s match {
+      case '^' :: rest => (acc.reverse, rest)
+      case _ =>
+        val (tree, rest) = parseMTree(s)
+        parseMTreeList(rest, tree :: acc)
+    }
+
+  def parseMTree(s: List[Char]): (MTree[Char], List[Char]) =
+    s match {
+      case Nil => throw new IllegalArgumentException("Invalid node string")
+      case value :: r0 =>
+        val (children, r1) = parseMTreeList(r0)
+        (MTree(value, children), r1)
+    }
+
+  implicit def string2MTree(s: String) = parseMTree(s.toList) match {
+    case (tree, Nil) => tree
+    case _ => throw new IllegalArgumentException("Invalid node string")
+  }
+
 }
