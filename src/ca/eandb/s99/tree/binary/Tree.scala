@@ -86,9 +86,9 @@ sealed abstract class Tree[+T] {
   private def layoutBinaryTree(x: Int, y: Int): (Tree[T], Int) = this match {
     case End => (End, 0)
     case Node(value, left, right) =>
-      val lp = left.layoutBinaryTree(x, y + 1)
-      val rp = right.layoutBinaryTree(x + lp._2 + 1, y + 1)
-      (PositionedNode(value, lp._1, rp._1, x + lp._2, y), 1 + lp._2 + rp._2)
+      val (lp, lw) = left.layoutBinaryTree(x, y + 1)
+      val (rp, rw) = right.layoutBinaryTree(x + lw + 1, y + 1)
+      (PositionedNode(value, lp, rp, x + lw, y), 1 + lw + rw)
   }
   def layoutBinaryTree: Tree[T] = layoutBinaryTree(1, 1)._1
 
@@ -108,6 +108,39 @@ sealed abstract class Tree[+T] {
     })).length
     val x = powi(2, h - 1) - powi(2, h - lh - 1)
     layoutBinaryTree2(x, 1, powi(2, h - 2))
+  }
+
+  /** P66 */
+  private def layoutSpacing(left: List[(Int, Int)], right: List[(Int, Int)]): Int =
+    (left, right) match {
+      case (_, Nil) | (Nil, _) => 1
+      case ((_, lmax) :: ltail, (rmin, _) :: rtail) =>
+        max(((lmax - rmin) + 2) / 2, layoutSpacing(ltail, rtail))
+    }
+  private def mergeRanges(dx: Int, left: List[(Int, Int)], right: List[(Int, Int)]): List[(Int, Int)] =
+    (left, right) match {
+      case (Nil, Nil) => Nil
+      case ((lmin, lmax) :: ltail, Nil) =>
+        (lmin - dx, lmax - dx) :: mergeRanges(dx, ltail, Nil)
+      case (Nil, (rmin, rmax) :: rtail) =>
+        (rmin + dx, rmax + dx) :: mergeRanges(dx, Nil, rtail)
+      case ((lmin, lmax) :: ltail, (rmin, rmax) :: rtail) =>
+        (lmin - dx, rmax + dx) :: mergeRanges(dx, ltail, rtail)
+    }
+  private def layoutBinaryTree3WithRange(): (Tree[T], List[(Int, Int)]) = this match {
+    case End => (End, Nil)
+    case Node(value, End, End) => (PositionedNode(value, End, End, 0, 1), (0, 0) :: Nil)
+    case Node(value, left, right) =>
+      val (lp, lr) = left.layoutBinaryTree3WithRange()
+      val (rp, rr) = right.layoutBinaryTree3WithRange()
+      val dx = layoutSpacing(lr, rr)
+      (PositionedNode(value, lp.shift(-dx, 1), rp.shift(dx, 1), 0, 1),
+        (0, 0) :: mergeRanges(dx, lr, rr))
+  }
+  def layoutBinaryTree3: Tree[T] = {
+    val (layout, ranges) = layoutBinaryTree3WithRange()
+    val x0 = ranges.unzip._1.min
+    layout.shift(1 - x0, 0)
   }
 
 }
