@@ -145,7 +145,15 @@ sealed abstract class Tree[+T] {
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
-  override def toString = "T(%s %s %s)".format(value, left, right)
+
+//  override def toString = "T(%s %s %s)".format(value, left, right)
+
+  /** P67 */
+  override def toString = this match {
+    case Node(x, End, End) => x.toString
+    case _ => "%s(%s,%s)".format(value, left, right)
+  }
+
 }
 
 case class PositionedNode[+T](
@@ -162,7 +170,12 @@ case class PositionedNode[+T](
 }
 
 case object End extends Tree[Nothing] {
-  override def toString = "."
+
+//  override def toString = "."
+
+  /** P67 */
+  override def toString = ""
+
 }
 
 object Node {
@@ -252,5 +265,20 @@ object Tree {
     val r = n - maxHbalNodes(h - 1)
     completeBinaryTree(h, r, value)
   }
+
+  /** P67 */
+  def parseString(s: List[Char]): (Tree[Char], List[Char]) = s match {
+    case c :: '(' :: r0 =>
+      val (left, r1) = parseString(r0)
+      val (right, r2) = parseString(r1.tail)
+      (Node(c, left, right), r2.tail)
+    case ',' :: _ | ')' :: _ | Nil => (End, s)
+    case c :: rest => (Node(c), rest)
+  }
+  def fromString(s: String): Tree[Char] =
+    parseString(s.toList) match {
+      case (tree, Nil) => tree
+      case _ => throw new IllegalArgumentException("Invalid tree string")
+    }
 
 }
