@@ -26,6 +26,12 @@ case class MTree[+T](value: T, children: List[MTree[T]]) {
   /** P72 */
   def postorder: List[T] = children.flatMap(_.postorder) :+ value
 
+  /** P73 */
+  def lispyTree: String = children match {
+    case Nil => value.toString
+    case _ => "(%s %s)".format(value, children.map(_.lispyTree).mkString(" "))
+  }
+
 }
 
 object MTree {
