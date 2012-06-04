@@ -149,8 +149,8 @@ case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
 //  override def toString = "T(%s %s %s)".format(value, left, right)
 
   /** P67 */
-  override def toString = this match {
-    case Node(x, End, End) => x.toString
+  override def toString = (left, right) match {
+    case (End, End) => value.toString
     case _ => "%s(%s,%s)".format(value, left, right)
   }
 
