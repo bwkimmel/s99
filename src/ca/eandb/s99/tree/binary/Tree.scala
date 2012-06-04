@@ -253,6 +253,4 @@ object Tree {
     completeBinaryTree(h, r, value)
   }
 
-
-
 }
