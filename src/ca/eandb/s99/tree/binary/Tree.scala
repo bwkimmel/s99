@@ -142,6 +142,19 @@ sealed abstract class Tree[+T] {
     layout.shift(1 - x0, 0)
   }
 
+  /** P68 */
+  private def preorder[U >: T](acc: List[U]): List[U] = this match {
+    case Node(value, left, right) => value :: (left preorder (right preorder acc))
+    case End => acc
+  }
+  def preorder: List[T] = preorder(Nil)
+
+  private def inorder[U >: T](acc: List[U]): List[U] = this match {
+    case Node(value, left, right) => left inorder (value :: (right inorder acc))
+    case End => acc
+  }
+  def inorder: List[T] = inorder(Nil)
+
 }
 
 case class Node[+T](value: T, left: Tree[T], right: Tree[T]) extends Tree[T] {
@@ -280,5 +293,17 @@ object Tree {
       case (tree, Nil) => tree
       case _ => throw new IllegalArgumentException("Invalid tree string")
     }
+
+  /** P68 */
+  def preInTree[T](pre: List[T], in: List[T]): Tree[T] = pre match {
+    case Nil => End
+    case x :: rest =>
+      val index = in.indexOf(x)
+      val (lin, tail) = in.splitAt(index)
+      val rin = tail tail
+      val (lpre, rpre) = rest.splitAt(index)
+      Node(x, preInTree(lpre, lin), preInTree(rpre, rin))
+  }
+
 
 }
