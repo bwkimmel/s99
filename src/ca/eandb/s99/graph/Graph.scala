@@ -48,6 +48,20 @@ abstract class GraphBase[T, U] {
         edgeTarget(e, n).map( n => (n.value, e.value) )))
     }.toList
 
+  /** P81 */
+  def findPaths(src: T, dst: T): List[List[T]] = {
+    val from = nodes(src)
+    val to = nodes(dst)
+    def search(here: Node, visited: Set[Node] = Set.empty): List[List[T]] =
+      if (here == to)
+        List(to.value :: Nil)
+      else if (visited(here))
+        Nil
+      else
+        here.neighbors.flatMap(search(_, visited + here).map(here.value :: _))
+    search(from)
+  }
+
 }
 
 class Graph[T, U] extends GraphBase[T, U] {
