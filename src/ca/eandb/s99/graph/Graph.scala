@@ -36,6 +36,18 @@ abstract class GraphBase[T, U] {
     nodes = Map(value -> n) ++ nodes
     n
   }
+
+  /** P80 */
+  def toTermForm: (List[T], List[(T,T,U)]) =
+    (nodes.keys.toList, edges.map(_.toTuple))
+
+  /** P80 */
+  def toAdjacentForm: List[(T, List[(T,U)])] =
+    nodes.map { case (t, n) =>
+      (t, n.adj.flatMap( e =>
+        edgeTarget(e, n).map( n => (n.value, e.value) )))
+    }.toList
+
 }
 
 class Graph[T, U] extends GraphBase[T, U] {
@@ -55,6 +67,13 @@ class Graph[T, U] extends GraphBase[T, U] {
     nodes(n1).adj = e :: nodes(n1).adj
     nodes(n2).adj = e :: nodes(n2).adj
   }
+
+  /** P80 */
+  override def toString =
+    (edges.map(e => "%s-%s".format(e.n1.value, e.n2.value)) ++
+      nodes.collect { case (t, n) if n.adj.isEmpty => t.toString }).mkString(
+        "[", ", ", "]")
+
 }
 
 class Digraph[T, U] extends GraphBase[T, U] {
@@ -72,6 +91,14 @@ class Digraph[T, U] extends GraphBase[T, U] {
     edges = e :: edges
     nodes(source).adj = e :: nodes(source).adj
   }
+
+  /** P80 */
+  override def toString = {
+    val isolated = nodes.keySet --
+      edges.flatMap(e => List(e.n1.value, e.n2.value)).toSet
+    (edges.map(e => "%s>%s/%s".format(e.n1.value, e.n2.value, e.value)) :::
+      isolated.toList.map(_.toString)).mkString("[", ", ", "]")
+  }
 }
 
 abstract class GraphObjBase {
@@ -86,6 +113,14 @@ abstract class GraphObjBase {
   def adjacent[T](nodes: List[(T, List[T])]) =
     adjacentLabel(addAdjacentLabel(nodes))
   def adjacentLabel[T, U](nodes: List[(T, List[(T,U)])]): GraphClass[T, U]
+
+  protected val outer = """^\s*\[\s*\b([^\]]*)\b\s*]\s*$""".r
+  protected val isolatedNode = """^\s*(\w+)\s*(.*)$""".r
+  protected val directedLabeledEdge = """^\s*(\w+)\s*>\s*(\w+)\s*/\s*(\d+)\s*(.*)$""".r
+  protected val undirectedLabeledEdge = """^\s*(\w+)\s*-\s*(\w+)\s*/\s*(\d+)\s*(.*)$""".r
+  protected val directedEdge = """^\s*(\w+)\s*>\s*(\w+)\s*(.*)$""".r
+  protected val undirectedEdge = """^\s*(\w+)\s*-\s*(\w+)\s*(.*)$""".r
+  protected val comma = """^\s*,\s*(.*)$""".r
 }
 
 object Graph extends GraphObjBase {
@@ -106,6 +141,55 @@ object Graph extends GraphObjBase {
     }
     g
   }
+
+  /** P80 */
+  private def parseItemListTail(s: String, acc: Graph[String, Unit]): Graph[String, Unit] =
+    s match {
+      case comma(rest) => parseItemList(rest, acc)
+      case "" => acc
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+  private def parseItemList(s: String, acc: Graph[String, Unit]): Graph[String, Unit] =
+    s match {
+      case "" => acc
+      case undirectedEdge(n1, n2, rest) =>
+        acc.addNode(n1); acc.addNode(n2)
+        acc.addEdge(n1, n2, ())
+        parseItemListTail(rest, acc)
+      case isolatedNode(n, rest) =>
+        acc.addNode(n)
+        parseItemListTail(rest, acc)
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+  def fromString(s: String): Graph[String, Unit] =
+    s match {
+      case outer(inner) => parseItemList(inner, new Graph[String, Unit])
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+  private def parseLabeledItemListTail(s: String, acc: Graph[String, Int]): Graph[String, Int] =
+    s match {
+      case comma(rest) => parseLabeledItemList(rest, acc)
+      case "" => acc
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+  private def parseLabeledItemList(s: String, acc: Graph[String, Int]): Graph[String, Int] =
+    s match {
+      case "" => acc
+      case undirectedLabeledEdge(n1, n2, label, rest) =>
+        acc.addNode(n1); acc.addNode(n2)
+        acc.addEdge(n1, n2, label.toInt)
+        parseLabeledItemListTail(rest, acc)
+      case isolatedNode(n, rest) =>
+        acc.addNode(n)
+        parseLabeledItemListTail(rest, acc)
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+  def fromStringLabel(s: String): Graph[String, Int] =
+    s match {
+      case outer(inner) => parseLabeledItemList(inner, new Graph[String, Int])
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+
 }
 
 object Digraph extends GraphObjBase {
@@ -123,4 +207,63 @@ object Digraph extends GraphObjBase {
     for ((s, a) <- nodes; (d, l) <- a) g.addArc(s, d, l)
     g
   }
+
+  /** P80 */
+  private def parseItemListTail(s: String, acc: Digraph[String, Unit]): Digraph[String, Unit] =
+    s match {
+      case comma(rest) => parseItemList(rest, acc)
+      case "" => acc
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+  private def parseItemList(s: String, acc: Digraph[String, Unit]): Digraph[String, Unit] =
+    s match {
+      case "" => acc
+      case directedEdge(src, dst, rest) =>
+        acc.addNode(src); acc.addNode(dst)
+        acc.addArc(src, dst, ())
+        parseItemListTail(rest, acc)
+      case undirectedEdge(n1, n2, rest) =>
+        acc.addNode(n1); acc.addNode(n2)
+        acc.addArc(n1, n2, ())
+        acc.addArc(n2, n1, ())
+        parseItemListTail(rest, acc)
+      case isolatedNode(n, rest) =>
+        acc.addNode(n)
+        parseItemListTail(rest, acc)
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+  def fromString(s: String): Digraph[String, Unit] =
+    s match {
+      case outer(inner) => parseItemList(inner, new Digraph[String, Unit])
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+  private def parseLabeledItemListTail(s: String, acc: Digraph[String, Int]): Digraph[String, Int] =
+    s match {
+      case comma(rest) => parseLabeledItemList(rest, acc)
+      case "" => acc
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+  private def parseLabeledItemList(s: String, acc: Digraph[String, Int]): Digraph[String, Int] =
+    s match {
+      case "" => acc
+      case directedLabeledEdge(src, dst, label, rest) =>
+        acc.addNode(src); acc.addNode(dst)
+        acc.addArc(src, dst, label.toInt)
+        parseLabeledItemListTail(rest, acc)
+      case undirectedLabeledEdge(n1, n2, label, rest) =>
+        acc.addNode(n1); acc.addNode(n2)
+        acc.addArc(n1, n2, label.toInt)
+        acc.addArc(n2, n1, label.toInt)
+        parseLabeledItemListTail(rest, acc)
+      case isolatedNode(n, rest) =>
+        acc.addNode(n)
+        parseLabeledItemListTail(rest, acc)
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+  def fromStringLabel(s: String): Digraph[String, Int] =
+    s match {
+      case outer(inner) => parseLabeledItemList(inner, new Digraph[String, Int])
+      case _ => throw new IllegalArgumentException("Parse error")
+    }
+
 }
