@@ -62,6 +62,12 @@ abstract class GraphBase[T, U] {
     search(from)
   }
 
+  /** P82 */
+  def findCycles(n: T): List[List[T]] =
+    nodes(n).neighbors.flatMap(m => findPaths(m.value, n)) collect {
+      case path @ (x :: y :: rest) => n :: path
+    }
+
 }
 
 class Graph[T, U] extends GraphBase[T, U] {
