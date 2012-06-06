@@ -12,11 +12,20 @@ package graph
 abstract class GraphBase[T, U] {
   case class Edge(n1: Node, n2: Node, value: U) {
     def toTuple = (n1.value, n2.value, value)
+
+    /** P80 */
+    override def toString = value match {
+      case () => "%s-%s/%s".format(n1, n2, value)
+      case _ => "%s-%s".format(n1, n2)
+    }
   }
   case class Node(value: T) {
     var adj: List[Edge] = Nil
     // neighbors are all nodes adjacent to this node.
     def neighbors: List[Node] = adj.map(edgeTarget(_, this).get)
+
+    /** P80 */
+    override def toString = value.toString
   }
 
   var nodes: Map[T, Node] = Map()
@@ -90,7 +99,7 @@ class Graph[T, U] extends GraphBase[T, U] {
 
   /** P80 */
   override def toString =
-    (edges.map(e => "%s-%s".format(e.n1.value, e.n2.value)) ++
+    (edges.map(_.toString) ++
       nodes.collect { case (t, n) if n.adj.isEmpty => t.toString }).mkString(
         "[", ", ", "]")
 
@@ -116,7 +125,7 @@ class Digraph[T, U] extends GraphBase[T, U] {
   override def toString = {
     val isolated = nodes.keySet --
       edges.flatMap(e => List(e.n1.value, e.n2.value)).toSet
-    (edges.map(e => "%s>%s/%s".format(e.n1.value, e.n2.value, e.value)) :::
+    (edges.map(_.toString) ++
       isolated.toList.map(_.toString)).mkString("[", ", ", "]")
   }
 }
