@@ -10,13 +10,15 @@ package graph
  */
 
 abstract class GraphBase[T, U] {
+  protected val nodeSeparator: String
+
   case class Edge(n1: Node, n2: Node, value: U) {
     def toTuple = (n1.value, n2.value, value)
 
     /** P80 */
     override def toString = value match {
-      case () => "%s-%s/%s".format(n1, n2, value)
-      case _ => "%s-%s".format(n1, n2)
+      case () => "%s%s%s".format(n1, nodeSeparator, n2)
+      case _ => "%s%s%s/%s".format(n1, nodeSeparator, n2, value)
     }
   }
   case class Node(value: T) {
@@ -80,6 +82,8 @@ abstract class GraphBase[T, U] {
 }
 
 class Graph[T, U] extends GraphBase[T, U] {
+  override protected val nodeSeparator = "-"
+
   override def equals(o: Any) = o match {
     case g: Graph[_,_] => super.equals(g)
     case _ => false
@@ -106,6 +110,8 @@ class Graph[T, U] extends GraphBase[T, U] {
 }
 
 class Digraph[T, U] extends GraphBase[T, U] {
+  override protected val nodeSeparator = ">"
+
   override def equals(o: Any) = o match {
     case g: Digraph[_,_] => super.equals(g)
     case _ => false
