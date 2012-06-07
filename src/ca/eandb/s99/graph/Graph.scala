@@ -60,18 +60,15 @@ abstract class GraphBase[T, U] {
     }.toList
 
   /** P81 */
-  def findPaths(src: T, dst: T): List[List[T]] = {
-    val from = nodes(src)
-    val to = nodes(dst)
-    def search(here: Node, visited: Set[Node] = Set.empty): List[List[T]] =
-      if (here == to)
-        List(to.value :: Nil)
-      else if (visited(here))
-        Nil
-      else
-        here.neighbors.flatMap(search(_, visited + here).map(here.value :: _))
-    search(from)
-  }
+  protected def search(here: Node, to: Node, visited: Set[Node] = Set.empty): List[List[Node]] =
+    if (here == to)
+      List(to :: Nil)
+    else
+      here.neighbors.filterNot(visited).flatMap(
+        search(_, to, visited + here).map(here :: _))
+
+  def findPaths(from: T, to: T): List[List[T]] =
+    search(nodes(from), nodes(to)).map(_.map(_.value))
 
   /** P82 */
   def findCycles(n: T): List[List[T]] =
@@ -106,6 +103,27 @@ class Graph[T, U] extends GraphBase[T, U] {
     (edges.map(_.toString) ++
       nodes.collect { case (t, n) if n.adj.isEmpty => t.toString }).mkString(
         "[", ", ", "]")
+
+  /** P83 */
+  def findSpanningTrees(remaining: Set[Node], visited: Set[Node], edges: List[(T, T)]): List[Graph[T, Unit]] = {
+    def addPath(nodes: List[T], acc: List[(T, T)]): List[(T, T)] = nodes match {
+      case a :: (rest @ (b :: _)) => addPath(rest, (a, b) :: acc)
+      case _ => acc
+    }
+    if (remaining isEmpty)
+      Graph.term(nodes.keys.toList, edges) :: Nil
+    else
+      visited.toList.flatMap(search(_, remaining.head, visited)).flatMap( path =>
+        findSpanningTrees(
+          remaining -- path, visited ++ path,
+          addPath(path.map(_.value), edges)))
+  }
+
+  def spanningTrees: List[Graph[T, Unit]] =
+    findSpanningTrees(nodes.values.toSet - nodes.values.head, Set(nodes.values.head), Nil)
+
+  def isTree = spanningTrees.size == 1
+  def isConnected = spanningTrees nonEmpty
 
 }
 
