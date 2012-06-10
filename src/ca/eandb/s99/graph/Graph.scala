@@ -178,6 +178,24 @@ class Graph[T, U] extends GraphBase[T, U] {
   def isTree = spanningTrees.size == 1
   def isConnected = spanningTrees nonEmpty
 
+  /** P85 */
+  def findHomomorphism[T2, U2](that: Graph[T2, U2]): Option[Map[T, T2]] = {
+    def build(nodes1: List[T], nodes2: Set[T2], f: Map[T, T2] = Map.empty[T, T2]): Option[Map[T, T2]] =
+      nodes1 match {
+        case n1 :: rest =>
+          nodes2.collectFirst((n2: T2) =>
+            build(rest, nodes2 - n2, f + (n1 -> n2)) match {
+              case Some(h) if nodes(n1).neighbors.map(n => h(n.value)).toSet.subsetOf(
+                that.nodes(n2).neighbors.map(_.value).toSet) => h
+            })
+        case Nil => Some(f)
+      }
+    build(nodes.keys.toList, that.nodes.keySet)
+  }
+
+  def isIsomorphicTo[T2, U2](that: Graph[T2, U2]): Boolean =
+    this.findHomomorphism(that).isDefined && that.findHomomorphism(this).isDefined
+
 }
 
 class Digraph[T, U] extends GraphBase[T, U] {
