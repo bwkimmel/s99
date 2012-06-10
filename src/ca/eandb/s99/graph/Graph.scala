@@ -87,6 +87,22 @@ abstract class GraphBase[T, U] {
       case path @ (x :: y :: z :: rest) => n :: path
     }
 
+  def findShortestPathLengths(from: T)(implicit numeric: Numeric[U]): Map[T, U] = {
+    def search(here: T, din: Map[T, U]): Map[T, U] =
+      (nodes(here).adj :\ din) { (e, d) =>
+        val next = edgeTarget(e, nodes(here)).get.value
+        val dist = numeric.plus(d(here), e.value)
+        d.get(next) match {
+          case None =>
+            search(next, d + (next -> dist))
+          case Some(dmin) if numeric.lt(dist, dmin) =>
+            search(next, d + (next -> dist))
+          case _ => d
+        }
+      }
+    search(from, Map(from -> numeric.zero))
+  }
+
 }
 
 class Graph[T, U] extends GraphBase[T, U] {
@@ -148,22 +164,6 @@ class Graph[T, U] extends GraphBase[T, U] {
     val g = new Graph[T, U]
     g.addNode(nodes.keys.head)
     build(g)
-  }
-
-  def findShortestPathLengths(from: T)(implicit numeric: Numeric[U]): Map[T, U] = {
-    def search(here: T, din: Map[T, U]): Map[T, U] =
-      (nodes(here).adj :\ din) { (e, d) =>
-        val next = edgeTarget(e, nodes(here)).get.value
-        val dist = numeric.plus(d(here), e.value)
-        d.get(next) match {
-          case None =>
-            search(next, d + (next -> dist))
-          case Some(dmin) if numeric.lt(dist, dmin) =>
-            search(next, d + (next -> dist))
-          case _ => d
-        }
-      }
-    search(from, Map(from -> numeric.zero))
   }
 
   def spanningTrees: List[Graph[T, U]] =
