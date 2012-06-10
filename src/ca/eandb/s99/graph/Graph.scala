@@ -28,6 +28,9 @@ abstract class GraphBase[T, U] {
     // neighbors are all nodes adjacent to this node.
     def neighbors: List[Node] = adj.map(edgeTarget(_, this).get)
 
+    /** P86 */
+    lazy val degree = adj.length
+
     /** P80 */
     override def toString = value.toString
   }
@@ -86,6 +89,9 @@ abstract class GraphBase[T, U] {
     nodes(n).neighbors.flatMap(m => findPaths(m.value, n)) collect {
       case path @ (x :: y :: z :: rest) => n :: path
     }
+
+  /** P86 */
+  def nodesByDegree = nodes.values.toList.sortBy(_.degree)
 
   def findShortestPathLengths(from: T)(implicit numeric: Numeric[U]): Map[T, U] = {
     def search(here: T, din: Map[T, U]): Map[T, U] =
