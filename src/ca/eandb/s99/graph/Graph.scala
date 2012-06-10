@@ -1,6 +1,8 @@
 package ca.eandb.s99
 package graph
 
+import javax.swing.tree.TreeNode
+
 /**
  * Created with IntelliJ IDEA.
  * User: brad
@@ -60,15 +62,24 @@ abstract class GraphBase[T, U] {
     }.toList
 
   /** P81 */
-  protected def search(here: Node, to: Node, visited: Set[Node] = Set.empty): List[List[Node]] =
+  protected def search(here: Node, to: Node, visited: Set[Node] = Set.empty): List[List[Edge]] =
     if (here == to)
-      List(to :: Nil)
+      List(Nil)
     else
-      here.neighbors.filterNot(visited).flatMap(
-        search(_, to, visited + here).map(here :: _))
+      here.adj.flatMap { e =>
+        val next = edgeTarget(e, here).get
+        if (visited(next)) Nil
+        else search(next, to, visited + here).map(e :: _)
+      }
+
+  protected def pathNodes(from: Node, edges: List[Edge]): List[Node] =
+    edges.scanLeft(from)((n, e) => edgeTarget(e, n).get)
+
+  def findPaths(from: Node, to: Node): List[List[Node]] =
+    search(from, to).map(pathNodes(from, _))
 
   def findPaths(from: T, to: T): List[List[T]] =
-    search(nodes(from), nodes(to)).map(_.map(_.value))
+    findPaths(nodes(from), nodes(to)).map(_.map(_.value))
 
   /** P82 */
   def findCycles(n: T): List[List[T]] =
@@ -105,21 +116,57 @@ class Graph[T, U] extends GraphBase[T, U] {
         "[", ", ", "]")
 
   /** P83 */
-  def findSpanningTrees(remaining: Set[Node], visited: Set[Node], edges: List[(T, T)]): List[Graph[T, Unit]] = {
-    def addPath(nodes: List[T], acc: List[(T, T)]): List[(T, T)] = nodes match {
-      case a :: (rest @ (b :: _)) => addPath(rest, (a, b) :: acc)
-      case _ => acc
-    }
+  def findSpanningTrees(remaining: Set[Node], visited: Set[Node], edges: List[Edge]): List[Graph[T, U]] = {
     if (remaining isEmpty)
-      Graph.term(nodes.keys.toList, edges) :: Nil
+      List(Graph.termLabel(nodes.keys.toList, edges.map(_.toTuple)))
     else
       visited.toList.flatMap(search(_, remaining.head, visited)).flatMap( path =>
         findSpanningTrees(
-          remaining -- path, visited ++ path,
-          addPath(path.map(_.value), edges)))
+          remaining -- path.flatMap(e => Seq(e.n1, e.n2)),
+          visited   ++ path.flatMap(e => Seq(e.n1, e.n2)),
+          edges     ++ path))
   }
 
-  def spanningTrees: List[Graph[T, Unit]] =
+  /** P84 */
+  def minimalSpanningTree(implicit ordering: Ordering[U]) = {
+    def build(g: Graph[T, U])(implicit ordering: Ordering[U]): Option[Graph[T, U]] = {
+      def visited(x: (Edge, Node)) = g.nodes.contains(x._2.value)
+      val out = g.nodes.keys.toList.flatMap(n =>
+        nodes(n).adj.map(e =>
+          (e, edgeTarget(e, nodes(n)).get)).filterNot(visited))
+      out match {
+        case Nil if nodes.size == g.nodes.size => Some(g)
+        case Nil => None
+        case _ =>
+          val (edge, node) = out.minBy(_._1.value)
+          g.addNode(node.value)
+          g.addEdge(edge.n1.value, edge.n2.value, edge.value)
+          build(g)
+      }
+    }
+
+    val g = new Graph[T, U]
+    g.addNode(nodes.keys.head)
+    build(g)
+  }
+
+  def findShortestPathLengths(from: T)(implicit numeric: Numeric[U]): Map[T, U] = {
+    def search(here: T, din: Map[T, U]): Map[T, U] =
+      (nodes(here).adj :\ din) { (e, d) =>
+        val next = edgeTarget(e, nodes(here)).get.value
+        val dist = numeric.plus(d(here), e.value)
+        d.get(next) match {
+          case None =>
+            search(next, d + (next -> dist))
+          case Some(dmin) if numeric.lt(dist, dmin) =>
+            search(next, d + (next -> dist))
+          case _ => d
+        }
+      }
+    search(from, Map(from -> numeric.zero))
+  }
+
+  def spanningTrees: List[Graph[T, U]] =
     findSpanningTrees(nodes.values.toSet - nodes.values.head, Set(nodes.values.head), Nil)
 
   def isTree = spanningTrees.size == 1
