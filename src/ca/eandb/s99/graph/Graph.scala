@@ -111,6 +111,9 @@ abstract class GraphBase[T, U] {
     visit(nodes(n) :: Nil)
   }
 
+  /** P89 */
+  def isBipartite = (colorNodes.map(_._2).toSet.size <= 2)
+
   def findShortestPathLengths(from: T)(implicit numeric: Numeric[U]): Map[T, U] = {
     def search(here: T, din: Map[T, U]): Map[T, U] =
       (nodes(here).adj :\ din) { (e, d) =>
