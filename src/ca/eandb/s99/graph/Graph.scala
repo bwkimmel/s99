@@ -98,6 +98,17 @@ abstract class GraphBase[T, U] {
       colors + (node -> Stream.from(1).filterNot(
         node.neighbors.flatMap(colors.get).contains).head)).toList
 
+  /** P87 */
+  def nodesByDepthFrom(n: T): List[T] = {
+    def visit(remaining: List[Node] = Nil, visited: Set[Node] = Set.empty, acc: List[T] = Nil): List[T] =
+      remaining match {
+        case n :: rest if !visited(n) => visit(n.neighbors ++ remaining, visited + n, n.value :: acc)
+        case n :: rest => visit(rest, visited, acc)
+        case Nil => acc
+      }
+    visit(nodes(n) :: Nil)
+  }
+
   def findShortestPathLengths(from: T)(implicit numeric: Numeric[U]): Map[T, U] = {
     def search(here: T, din: Map[T, U]): Map[T, U] =
       (nodes(here).adj :\ din) { (e, d) =>
