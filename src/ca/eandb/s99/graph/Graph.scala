@@ -93,6 +93,11 @@ abstract class GraphBase[T, U] {
   /** P86 */
   def nodesByDegree = nodes.values.toList.sortBy(_.degree)
 
+  def colorNodes: List[(Node, Int)] =
+    nodes.values.foldLeft(Map.empty[Node, Int])((colors, node) =>
+      colors + (node -> Stream.from(1).filterNot(
+        node.neighbors.flatMap(colors.get).contains).head)).toList
+
   def findShortestPathLengths(from: T)(implicit numeric: Numeric[U]): Map[T, U] = {
     def search(here: T, din: Map[T, U]): Map[T, U] =
       (nodes(here).adj :\ din) { (e, d) =>
