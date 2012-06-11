@@ -28,6 +28,8 @@ abstract class GraphBase[T, U] {
     // neighbors are all nodes adjacent to this node.
     def neighbors: List[Node] = adj.map(edgeTarget(_, this).get)
 
+    def toAdjacentTuple = (value, adj.map(e => (edgeTarget(e, this).get.value, e.value)))
+
     /** P86 */
     lazy val degree = adj.length
 
@@ -211,6 +213,20 @@ class Graph[T, U] extends GraphBase[T, U] {
 
   def isIsomorphicTo[T2, U2](that: Graph[T2, U2]): Boolean =
     this.findHomomorphism(that).isDefined && that.findHomomorphism(this).isDefined
+
+  /** P88 */
+  def splitGraph: List[Graph[T, U]] = {
+    def split(remaining: Set[T], acc: List[Graph[T, U]] = Nil): List[Graph[T, U]] =
+      remaining.headOption match {
+        case Some(n) =>
+          val componentNodes = nodesByDepthFrom(n)
+          val component = Graph.adjacentLabel(
+            componentNodes.map(nodes(_).toAdjacentTuple))
+          split(remaining -- componentNodes, component :: acc)
+        case None => acc
+      }
+    split(nodes.keySet)
+  }
 
 }
 
