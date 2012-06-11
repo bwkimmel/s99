@@ -55,6 +55,9 @@ abstract class GraphBase[T, U] {
     n
   }
 
+  def toGraph: Graph[T, U]
+  def graphType: GraphObjBase
+
   /** P80 */
   def toTermForm: (List[T], List[(T,T,U)]) =
     (nodes.keys.toList, edges.map(_.toTuple))
@@ -129,6 +132,21 @@ abstract class GraphBase[T, U] {
     visit(nodes(n) :: Nil)
   }
 
+  /** P88 */
+  def splitGraph: List[GraphObjBase#GraphClass[T, U]] = {
+    val g = toGraph
+    def split(remaining: Set[T], acc: List[GraphObjBase#GraphClass[T, U]] = Nil): List[GraphObjBase#GraphClass[T, U]] =
+      remaining.headOption match {
+        case Some(n) =>
+          val componentNodes = g.nodesByDepthFrom(n)
+          val component = graphType.adjacentLabel(
+            componentNodes.map(nodes(_).toAdjacentTuple))
+          split(remaining -- componentNodes, component :: acc)
+        case None => acc
+      }
+    split(nodes.keySet)
+  }
+
   /** P89 */
   def isBipartite = (colorNodes.map(_._2).toSet.size <= 2)
 
@@ -169,6 +187,9 @@ class Graph[T, U] extends GraphBase[T, U] {
     nodes(n1).adj = e :: nodes(n1).adj
     nodes(n2).adj = e :: nodes(n2).adj
   }
+
+  override def toGraph = this
+  override def graphType = Graph
 
   /** P80 */
   override def toString =
@@ -217,20 +238,6 @@ class Graph[T, U] extends GraphBase[T, U] {
   def isTree = spanningTrees.size == 1
   def isConnected = spanningTrees nonEmpty
 
-  /** P88 */
-  def splitGraph: List[Graph[T, U]] = {
-    def split(remaining: Set[T], acc: List[Graph[T, U]] = Nil): List[Graph[T, U]] =
-      remaining.headOption match {
-        case Some(n) =>
-          val componentNodes = nodesByDepthFrom(n)
-          val component = Graph.adjacentLabel(
-            componentNodes.map(nodes(_).toAdjacentTuple))
-          split(remaining -- componentNodes, component :: acc)
-        case None => acc
-      }
-    split(nodes.keySet)
-  }
-
 }
 
 class Digraph[T, U] extends GraphBase[T, U] {
@@ -250,6 +257,9 @@ class Digraph[T, U] extends GraphBase[T, U] {
     edges = e :: edges
     nodes(source).adj = e :: nodes(source).adj
   }
+
+  override def toGraph = Graph.termLabel(nodes.keys.toList, edges.map(_.toTuple))
+  override def graphType = Digraph
 
   /** P80 */
   override def toString = {
