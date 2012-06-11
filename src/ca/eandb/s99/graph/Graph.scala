@@ -91,10 +91,10 @@ abstract class GraphBase[T, U] {
     }
 
   /** P86 */
-  def nodesByDegree = nodes.values.toList.sortBy(_.degree)
+  def nodesByDegree = nodes.values.toList.sortBy(-_.degree)
 
   def colorNodes: List[(Node, Int)] =
-    nodes.values.foldLeft(Map.empty[Node, Int])((colors, node) =>
+    nodesByDegree.foldLeft(Map.empty[Node, Int])((colors, node) =>
       colors + (node -> Stream.from(1).filterNot(
         node.neighbors.flatMap(colors.get).contains).head)).toList
 
