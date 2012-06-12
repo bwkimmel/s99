@@ -40,6 +40,9 @@ abstract class GraphBase[T, U] {
   var nodes: Map[T, Node] = Map()
   var edges: List[Edge] = Nil
 
+  def nodeCount = nodes.size
+  def edgeCount = edges.size
+
   // If the edge E connects N to another node, returns the other node,
   // otherwise returns None.
   def edgeTarget(e: Edge, n: Node): Option[Node]
@@ -131,6 +134,9 @@ abstract class GraphBase[T, U] {
       }
     visit(nodes(n) :: Nil)
   }
+
+  def nodesByDepthPreOrderFrom(n: T): List[T] =
+    nodesByDepthFrom(n) reverse
 
   /** P88 */
   def splitGraph: List[GraphObjBase#GraphClass[T, U]] = {

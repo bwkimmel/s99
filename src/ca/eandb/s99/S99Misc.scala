@@ -1,6 +1,7 @@
 package ca.eandb.s99
 
 import collection.SeqView
+import graph.Graph
 
 /**
  * Created with IntelliJ IDEA.
@@ -72,6 +73,47 @@ object P91 {
     def closedKnightsTours =
       knightsToursFrom(Point(1, 1)).find(tour => knightJumps.collect(tour.last +).contains(tour.head))
 
+  }
+
+}
+
+object P92 {
+
+  def findMap[T, U](g: Graph[T, U]): Option[Map[T, Int]] = {
+    if (!g.isTree)
+      throw new IllegalArgumentException("g not a tree")
+
+    def search(
+                nodes: List[T],
+                nodeLabels: Map[T, Int],
+                availNodeLabels: Set[Int],
+                availEdgeLabels: Set[Int]): Option[Map[T, Int]] =
+    nodes match {
+      case node :: rest =>
+        val neighbors = g.nodes(node).neighbors
+        val allowedByNeighbours =
+          neighbors.map(_.value).flatMap(nodeLabels.get).map(nodeLabel =>
+            availEdgeLabels.flatMap(edgeLabel =>
+              List(nodeLabel + edgeLabel, nodeLabel - edgeLabel)))
+        val allowed = (availNodeLabels /: allowedByNeighbours)(_ & _)
+        allowed.toStream.flatMap(nodeLabel =>
+          search(
+            rest,
+            nodeLabels + (node -> nodeLabel),
+            availNodeLabels - nodeLabel,
+            availEdgeLabels -- neighbors.map(_.value).flatMap(nodeLabels.get).map(
+              adjNodeLabel => math.abs(adjNodeLabel - nodeLabel)))).headOption
+
+      case Nil => Some(nodeLabels)
+    }
+
+    val nodeLabels = (1 to g.nodeCount) toSet
+    val edgeLabels = nodeLabels - g.nodeCount
+    search(
+      g.nodesByDepthPreOrderFrom(g.nodes.keys.head),
+      Map.empty,
+      nodeLabels,
+      edgeLabels)
   }
 
 }
