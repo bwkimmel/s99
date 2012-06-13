@@ -246,7 +246,10 @@ object P95 {
   }
 
   def fullWords(num: Int): String =
-    fullWords(digits(num))
+    if (num < 0)
+      "negative %s".format(fullWords(-num))
+    else
+      fullWords(digits(num))
 
   def fullWords(d: List[Int]): String =
     d.reverse.grouped(3).map(_.padTo(3, 0)).zipWithIndex.toList.reverse.flatMap {
