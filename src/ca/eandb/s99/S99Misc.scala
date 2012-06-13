@@ -1,6 +1,5 @@
 package ca.eandb.s99
 
-import collection.SeqView
 import graph.Graph
 
 /**
@@ -115,5 +114,90 @@ object P92 {
       nodeLabels,
       edgeLabels)
   }
+
+}
+
+object P93 {
+
+  case class Eq(lhs: Expr, rhs: Expr) {
+    def isTrue = (lhs.value == rhs.value)
+    override def toString = "%s = %s".format(lhs, rhs)
+  }
+
+  sealed trait Expr {
+    def value: Option[Int]
+  }
+  case class Add(x: Expr, y: Expr) extends Expr {
+    lazy val value = (x.value, y.value) match {
+      case (Some(a), Some(b)) => Some(a + b)
+      case _ => None
+    }
+    override def toString = "(%s + %s)".format(x, y)
+  }
+  case class Sub(x: Expr, y: Expr) extends Expr {
+    lazy val value = (x.value, y.value) match {
+      case (Some(a), Some(b)) => Some(a - b)
+      case _ => None
+    }
+    override def toString = "(%s - %s)".format(x, y)
+  }
+  case class Mul(x: Expr, y: Expr) extends Expr {
+    lazy val value = (x.value, y.value) match {
+      case (Some(a), Some(b)) => Some(a * b)
+      case _ => None
+    }
+    override def toString = "(%s * %s)".format(x, y)
+  }
+  case class Div(x: Expr, y: Expr) extends Expr {
+    lazy val value = (x.value, y.value) match {
+      case (Some(a), Some(b)) if b != 0 && a % b == 0 => Some(a / b)
+      case _ => None
+    }
+    override def toString = "(%s / %s)".format(x, y)
+  }
+  case class Const(x: Int) extends Expr {
+    val value = Some(x)
+    override def toString = x.toString
+  }
+
+  def isCanonical(expr: Expr): Boolean = expr match {
+    case Add(a, Add(b, c)) => false
+    case Mul(a, Mul(b, c)) => false
+    case Add(a, Sub(b, c)) => false
+    case Mul(a, Div(b, c)) => false
+    case Sub(a, b) => isCanonical(a) && isCanonical(b)
+    case Div(a, b) => isCanonical(a) && isCanonical(b)
+    case _ => true
+  }
+
+  def findExpressions(terms: List[Int]): Stream[Expr] = terms match {
+    case Nil => Stream.empty
+    case x :: Nil => Stream(Const(x))
+    case _ =>
+      (1 to (terms.length - 1)).toStream.map(terms splitAt _).flatMap {
+        case (a, b) =>
+          val asub = findExpressions(a)
+          val bsub = findExpressions(b)
+          asub.flatMap(x => bsub.flatMap(y =>
+            List(Add(x, y), Sub(x, y), Div(x, y), Mul(x, y)))) }
+  }
+
+  def findCanonicalExpressions(terms: List[Int]): Stream[Expr] =
+    findExpressions(terms).filter(isCanonical)
+
+  def findEquations(terms: List[Int]): Stream[Eq] = {
+    (1 to (terms.length - 1)).toStream.map(terms splitAt _).flatMap {
+      case (a, b) =>
+        val lhsByVal = findExpressions(a).filter(_.value.isDefined).groupBy(_.value.get)
+        val rhsByVal = findExpressions(b).filter(_.value.isDefined).groupBy(_.value.get)
+        lhsByVal.flatMap {
+          case (lval, lexprs) =>
+            rhsByVal.get(lval).toStream.flatMap(rexprs =>
+              lexprs.flatMap(lhs =>
+                rexprs.map(rhs => Eq(lhs, rhs)))) } } }
+
+  def findCanonicalEquations(terms: List[Int]): Stream[Eq] =
+    findEquations(terms).filter(eq =>
+      isCanonical(eq.lhs) && isCanonical(eq.rhs))
 
 }
