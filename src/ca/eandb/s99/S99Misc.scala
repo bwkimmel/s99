@@ -201,3 +201,63 @@ object P93 {
       isCanonical(eq.lhs) && isCanonical(eq.rhs))
 
 }
+
+object P95 {
+
+  def digits(num: Int, acc: List[Int] = Nil): List[Int] = (num, acc) match {
+    case (0, Nil) => List(0)
+    case (0, _) => acc
+    case (n, _) if n > 0 => digits(num / 10, (num % 10) :: acc)
+    case _ => throw new IllegalArgumentException("num < 0")
+  }
+
+  val digitNames =
+    Array("zero", "one", "two"  , "three", "four",
+          "five", "six", "seven", "eight", "nine")
+
+  val teens =
+    Array("ten"    , "eleven" , "twelve"   , "thirteen", "fourteen",
+          "fifteen", "sixteen", "seventeen", "eighteen", "nineteen")
+
+  val tens =
+    Array("-"    , "-"    , "twenty" , "thirty", "forty",
+          "fifty", "sixty", "seventy", "eighty", "ninety")
+
+  val hundred = "hundred"
+
+  val powersOf1000 =
+    Array("", "thousand", "million", "billion", "trillion", "quadrillion",
+      "quintillion", "sextillion", "septillion", "octillion", "nonillion",
+      "decillion", "undecillion", "duodecillion", "tredecillion",
+      "quattuordecillion", "quidecillion", "sexdecillion", "septendecillion",
+      "octodecillion", "novemdecillion", "vigintillion")
+
+  def fullWordsSimple(num: Int): String =
+    digits(num).map(digitNames).mkString("-")
+
+  def fullWordsTriple(d: (Int, Int, Int)): String = d match {
+    case (0, 0, x) => digitNames(x)
+    case (0, 1, x) => teens(x)
+    case (0, t, 0) => tens(t)
+    case (0, t, x) => "%s-%s".format(tens(t), digitNames(x))
+    case (h, 0, 0) => List(digitNames(h), hundred).mkString(" ")
+    case (h, t, x) =>
+      List(digitNames(h), hundred, fullWordsTriple((0, t, x))).mkString(" ")
+  }
+
+  def fullWords(num: Int): String =
+    fullWords(digits(num))
+
+  def fullWords(d: List[Int]): String =
+    d.reverse.grouped(3).map(_.padTo(3, 0)).zipWithIndex.toList.reverse.flatMap {
+      case (List(0, 0, 0), _) => Nil
+      case (List(x, t, h), 0) => List(fullWordsTriple((h, t, x)))
+      case (List(x, t, h), p) =>
+        List(fullWordsTriple((h, t, x)), powersOf1000(p))
+      case _ => throw new IllegalArgumentException()
+    } match {
+      case Nil => digitNames(0)
+      case words => words.mkString(" ")
+    }
+
+}
