@@ -205,13 +205,13 @@ object P93 {
 object P94 {
 
   def regularGraphs(k: Int, n: Int): List[Graph[Int, Unit]] = {
-    def generate(degMap: Map[Int, List[Int]]): Stream[Graph[Int, Unit]] =
-      degMap.toList.filter(_._2.length < k) match {
-        case Nil => Stream(Graph.adjacent(degMap.toList))
+    def generate(k: Int, adjMap: Map[Int, List[Int]]): Stream[Map[Int, List[Int]]] =
+      adjMap.toList.filter(_._2.length < k) match {
+        case Nil => Stream(adjMap)
         case _ :: Nil => Stream.empty
         case (n1, adj1) :: rest => rest.toStream.collect {
           case (n2, adj2) if !adj2.contains(n1) =>
-            generate(degMap ++ List(n1 -> (n2 :: adj1), n2 -> (n1 :: adj2))) } flatten }
+            generate(k, adjMap ++ List(n1 -> (n2 :: adj1), n2 -> (n1 :: adj2))) } flatten }
 
     def filterNonIsomorphic(graphs: List[Graph[Int, Unit]]): List[Graph[Int, Unit]] =
       graphs match {
@@ -221,8 +221,18 @@ object P94 {
         case Nil => Nil
       }
 
-    filterNonIsomorphic(
-      generate(Map.empty ++ (1 to n).map(_ -> Nil)).toList)
+    val seed = Map.empty ++ (1 to n).map(_ -> Nil)
+    val adj: Stream[Map[Int, List[Int]]] =
+      if (k < (n - 1) / 2)
+        generate(k, seed)
+      else
+        generate(n - 1 - k, seed).map(
+          _.mapValues(adj => (1 to n).toList.filterNot(adj contains)))
+
+    def toGraph(adj: Map[Int, List[Int]]): Graph[Int, Unit] =
+      Graph.adjacent(adj.toList)
+
+    filterNonIsomorphic(adj map toGraph toList)
   }
 
 }
