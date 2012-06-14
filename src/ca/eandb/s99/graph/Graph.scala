@@ -117,7 +117,9 @@ abstract class GraphBase[T, U] {
     this.findHomomorphism(that).isDefined && that.findHomomorphism(this).isDefined
 
   /** P86 */
-  def nodesByDegree = nodes.values.toList.sortBy(-_.degree)
+  def nodesByDegree = nodesByDegreeDecreasing
+  def nodesByDegreeIncreasing = nodes.values.toList.sortBy(_.degree)
+  def nodesByDegreeDecreasing = nodes.values.toList.sortBy(-_.degree)
 
   def colorNodes: List[(Node, Int)] =
     nodesByDegree.foldLeft(Map.empty[Node, Int])((colors, node) =>
