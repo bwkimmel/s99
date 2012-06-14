@@ -264,3 +264,27 @@ object P95 {
     }
 
 }
+
+object P96 {
+
+  def isIdentifier(s: String): Boolean = {
+    def scanIdentifier(chars: List[Char]): Boolean = chars match {
+      case x :: rest if x.isLetter => scanIdentifierTail(rest)
+      case _ => false
+    }
+
+    def scanIdentifierTail(chars: List[Char]): Boolean = chars match {
+      case '_' :: rest => scanAfterUnderscore(rest)
+      case x :: rest if x.isLetterOrDigit => scanIdentifierTail(rest)
+      case Nil => true
+    }
+
+    def scanAfterUnderscore(chars: List[Char]): Boolean = chars match {
+      case x :: rest if x.isLetterOrDigit => scanIdentifierTail(rest)
+      case _ => false
+    }
+
+    scanIdentifier(s.toList)
+  }
+
+}
