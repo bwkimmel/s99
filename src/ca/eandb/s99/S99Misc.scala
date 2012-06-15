@@ -227,7 +227,7 @@ object P94 {
         generate(k, seed)
       else
         generate(n - 1 - k, seed).map(
-          _.mapValues(adj => (1 to n).toList.filterNot(adj contains)))
+          _.mapValues(adj => (1 to n).toList -- adj))
 
     def toGraph(adj: Map[Int, List[Int]]): Graph[Int, Unit] =
       Graph.adjacent(adj.toList)
