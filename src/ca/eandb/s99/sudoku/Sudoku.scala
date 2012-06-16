@@ -34,6 +34,14 @@ case class Sudoku(n: Int = 3) {
 
   }
 
+  object CellRef {
+    def apply(row: Int, col: Int): CellRef = CellRef(
+      1 + (row - 1) / n,
+      1 + (col - 1) / n,
+      1 + (row - 1) % n,
+      1 + (col - 1) % n)
+  }
+
   def allCells: Stream[CellRef] =
     (1 to n view).flatMap(br =>
       (1 to n view).flatMap(bc =>
