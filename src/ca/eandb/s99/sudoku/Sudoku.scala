@@ -22,9 +22,9 @@ case class Sudoku(n: Int = 3) {
 
   private lazy val all = Stream.from(1).take(n * n).toSet
 
-  case class CellRef(blockRow: Int, blockCol: Int, cellRow: Int, cellCol: Int) {
+  case class Cell(blockRow: Int, blockCol: Int, cellRow: Int, cellCol: Int) {
 
-    def linkedCells: List[CellRef] =
+    def linkedCells: List[Cell] =
       (1 to n).toList.flatMap(i => (1 to n).flatMap(j => List(
         if (i != blockRow) Some(copy(blockRow = i, cellRow = j)) else None,
         if (i != blockCol) Some(copy(blockCol = i, cellCol = j)) else None,
@@ -34,23 +34,23 @@ case class Sudoku(n: Int = 3) {
 
   }
 
-  object CellRef {
-    def apply(row: Int, col: Int): CellRef = CellRef(
+  object Cell {
+    def apply(row: Int, col: Int): Cell = Cell(
       1 + (row - 1) / n,
       1 + (col - 1) / n,
       1 + (row - 1) % n,
       1 + (col - 1) % n)
   }
 
-  def allCells: Stream[CellRef] =
+  def allCells: Stream[Cell] =
     (1 to n view).flatMap(br =>
       (1 to n view).flatMap(bc =>
         (1 to n view).flatMap(cr =>
-          (1 to n view).map(cc => CellRef(br, bc, cr, cc) )))).toStream
+          (1 to n view).map(cc => Cell(br, bc, cr, cc) )))).toStream
 
   lazy val numberOfCells = n * n * n * n
 
-  case class Board(cells: Map[CellRef, Int], branches: Map[CellRef, Set[Int]]) {
+  case class Board(cells: Map[Cell, Int], branches: Map[Cell, Set[Int]]) {
 
     private lazy val nextCell =
       branches.filterKeys(!cells.keySet(_)).find(_._2.size == 1)
@@ -67,7 +67,7 @@ case class Sudoku(n: Int = 3) {
         (1 to n).map(cr =>
           (1 to n).map(bc =>
             (1 to n).map(cc =>
-              strs.getOrElse(CellRef(br, bc, cr, cc), "."))
+              strs.getOrElse(Cell(br, bc, cr, cc), "."))
               .mkString("  "))
             .mkString(" | "))
           .mkString(lineSep))
@@ -102,7 +102,7 @@ case class Sudoku(n: Int = 3) {
     def solution: Board =
       if (isFinal) this else advance.solution
 
-    def set(cell: CellRef, value: Int) =
+    def set(cell: Cell, value: Int) =
       Board(
         cells + (cell -> value),
         branches + (cell -> (branches.getOrElse(cell, all) & Set(value))) ++
@@ -115,7 +115,7 @@ case class Sudoku(n: Int = 3) {
 
     val empty = Board(Map.empty, Map.empty)
 
-    def apply(cells: Map[CellRef, Int]): Board =
+    def apply(cells: Map[Cell, Int]): Board =
       cells.foldLeft(Board.empty) {
         case (board, (cell, value)) => board.set(cell, value) }
 
