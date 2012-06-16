@@ -10,9 +10,17 @@ package ca.eandb.s99.sudoku
 
 /* P97 */
 
+object Sudoku {
+
+  val symbols = ".123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".toStream
+
+}
+
 case class Sudoku(n: Int = 3) {
 
-  private lazy val symbols = (1 to (n * n)).toSet
+  private lazy val symbols = Sudoku.symbols.take(n * n + 1).toArray
+
+  private lazy val all = Stream.from(1).take(n * n).toSet
 
   case class CellRef(blockRow: Int, blockCol: Int, cellRow: Int, cellCol: Int) {
 
@@ -34,14 +42,37 @@ case class Sudoku(n: Int = 3) {
 
   lazy val numberOfCells = n * n * n * n
 
-  case class Board(cells: Map[CellRef, Int], branches: Map[CellRef, Set[Int]] = Map.empty) {
+  case class Board(cells: Map[CellRef, Int], branches: Map[CellRef, Set[Int]]) {
 
     private lazy val nextCell =
       branches.filterKeys(!cells.keySet(_)).find(_._2.size == 1)
 
+    override def toString = {
+      val strs = cells.mapValues(symbols)
+
+      val lineSep = (1 to n).map(x =>
+        (1 to n).map(x => " ").mkString("  ")).mkString("\n", " | ", "\n")
+      val blockSep = (1 to n).map(x =>
+        (1 to n).map(x => "-").mkString("--")).mkString("\n", "-+-", "\n")
+
+      (1 to n).map(br =>
+        (1 to n).map(cr =>
+          (1 to n).map(bc =>
+            (1 to n).map(cc =>
+              strs.getOrElse(CellRef(br, bc, cr, cc), "."))
+              .mkString("  "))
+            .mkString(" | "))
+          .mkString(lineSep))
+        .mkString(blockSep)
+    }
+
     def isFinal = nextCell isEmpty
 
     def isSolved = (cells.size == numberOfCells)
+
+    def isTrapped = branches.exists(_._2.isEmpty)
+
+    def hasUniqueSolution = solution.isSolved
 
     def advance: Board =
       nextCell match {
@@ -50,13 +81,35 @@ case class Sudoku(n: Int = 3) {
             cells + (cell -> values.head),
             cell.linkedCells.foldLeft(branches) {
               case (next, linked) =>
-                next + (linked -> (next.getOrElse(linked, symbols) - values.head))
+                next + (linked -> (next.getOrElse(linked, all) - values.head))
             })
         case None => this
       }
 
-    def solve: Board =
-      if (isFinal) this else advance.solve
+    def advance(steps: Int): Board = steps match {
+      case 0 => this
+      case _ => advance.advance(steps - 1)
+    }
+
+    def solution: Board =
+      if (isFinal) this else advance.solution
+
+    def set(cell: CellRef, value: Int) =
+      Board(
+        cells + (cell -> value),
+        branches + (cell -> (branches.getOrElse(cell, all) & Set(value))) ++
+          cell.linkedCells.map(linked =>
+            linked -> (branches.getOrElse(linked, all) - value)))
+
+  }
+
+  object Board {
+
+    val empty = Board(Map.empty, Map.empty)
+
+    def apply(cells: Map[CellRef, Int]): Board =
+      cells.foldLeft(Board.empty) {
+        case (board, (cell, value)) => board.set(cell, value) }
 
   }
 
