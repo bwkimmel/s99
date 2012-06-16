@@ -32,28 +32,31 @@ case class Sudoku(n: Int) {
         (1 to n view).flatMap(cr =>
           (1 to n view).map(cc => CellRef(br, bc, cr, cc) )))).toStream
 
-  case class Board(cells: Map[CellRef, Set[Int]]) {
+  lazy val numberOfCells = n * n * n * n
 
-    def solve: Board = {
+  case class Board(cells: Map[CellRef, Int], branches: Map[CellRef, Set[Int]] = Map.empty) {
 
-      def analyse(solved: Set[CellRef], branches: Map[CellRef, Set[Int]]): Map[CellRef, Set[Int]] =
-        branches.filterKeys(!solved(_)).find(_._2.size == 1) match {
-          case Some((cell, values)) if values.size == 1 =>
-            analyse(solved + cell, cell.linkedCells.foldLeft(branches) {
-              case (next, cell) =>
-                next + (cell -> (next(cell) - values.head))
+    private lazy val nextCell =
+      branches.filterKeys(!cells.keySet(_)).find(_._2.size == 1)
+
+    def isFinal = nextCell isEmpty
+
+    def isSolved = (cells.size == numberOfCells)
+
+    def advance: Board =
+      nextCell match {
+        case Some((cell, values)) if values.size == 1 =>
+          Board(
+            cells + (cell -> values.head),
+            cell.linkedCells.foldLeft(branches) {
+              case (next, linked) =>
+                next + (linked -> (next.getOrElse(linked, symbols) - values.head))
             })
-          case None => branches
-        }
+        case None => this
+      }
 
-      val result = analyse(Set.empty,
-        Map.empty ++
-        allCells.map(_ -> symbols) ++
-        cells)
-
-      copy(cells = result)
-
-    }
+    def solve: Board =
+      if (isFinal) this else advance.solve
 
   }
 
