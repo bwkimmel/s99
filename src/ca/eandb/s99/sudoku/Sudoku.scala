@@ -10,7 +10,7 @@ package ca.eandb.s99.sudoku
 
 /* P97 */
 
-case class Sudoku(n: Int) {
+case class Sudoku(n: Int = 3) {
 
   private lazy val symbols = (1 to (n * n)).toSet
 
