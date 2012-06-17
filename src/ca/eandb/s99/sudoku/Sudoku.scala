@@ -50,10 +50,45 @@ case class Sudoku(n: Int = 3) {
 
   lazy val numberOfCells = n * n * n * n
 
+  def reduce(branches: Map[Cell, Set[Int]]): Map[Cell, Set[Int]] = {
+    val cellsByRow =
+      (1 to (n * n) view).map(row =>
+        (1 to (n * n) toList).map(col =>
+          Cell(row, col)))
+    val cellsByCol =
+      (1 to (n * n) view).map(col =>
+        (1 to (n * n) toList).map(row =>
+          Cell(row, col)))
+    val cellsByBlock =
+      (1 to n view).flatMap(br =>
+        (1 to n view).map(bc =>
+          (1 to n toList).flatMap(cr =>
+            (1 to n toList).map(cc =>
+              Cell(br, bc, cr, cc)))))
+    val groups: Seq[List[Cell]] = (cellsByRow ++ cellsByCol ++ cellsByBlock)
+
+    def pruneBranchTuples(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
+      branches ++ (group.groupBy(branches.getOrElse(_, all)) collect {
+        case (values, cells) if cells.size >= values.size =>
+          (group -- cells.take(values.size)).map(cell =>
+            (cell -> (branches.getOrElse(cell, all) -- values))) } flatten)
+
+    def pruneSlotTuples(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
+      branches ++ (all.groupBy(value => group.filter(branches.getOrElse(_, all).contains(value))) collect {
+        case (cells, values) if values.size >= cells.size =>
+          cells.map(cell =>
+            (cell -> values.take(cells.size))) } flatten)
+
+    def reduceGroup(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
+      pruneSlotTuples(pruneBranchTuples(branches, group), group)
+
+    groups.foldLeft(branches)(reduceGroup)
+  }
+
   case class Board(cells: Map[Cell, Int], branches: Map[Cell, Set[Int]]) {
 
     private lazy val nextCell =
-      branches.filterKeys(!cells.keySet(_)).find(_._2.size == 1)
+      (branches -- cells.keys).find(_._2.size == 1)
 
     override def toString = {
       val strs = cells.mapValues(symbols)
@@ -87,10 +122,10 @@ case class Sudoku(n: Int = 3) {
         case Some((cell, values)) if values.size == 1 =>
           Board(
             cells + (cell -> values.head),
-            cell.linkedCells.foldLeft(branches) {
+            reduce(cell.linkedCells.foldLeft(branches) {
               case (next, linked) =>
                 next + (linked -> (next.getOrElse(linked, all) - values.head))
-            })
+            }))
         case None => this
       }
 
@@ -105,9 +140,9 @@ case class Sudoku(n: Int = 3) {
     def set(cell: Cell, value: Int) =
       Board(
         cells + (cell -> value),
-        branches + (cell -> (branches.getOrElse(cell, all) & Set(value))) ++
+        reduce(branches + (cell -> (branches.getOrElse(cell, all) & Set(value))) ++
           cell.linkedCells.map(linked =>
-            linked -> (branches.getOrElse(linked, all) - value)))
+            linked -> (branches.getOrElse(linked, all) - value))))
 
   }
 
