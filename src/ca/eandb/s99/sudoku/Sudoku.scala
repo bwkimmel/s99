@@ -119,6 +119,12 @@ case class Sudoku(n: Int = 3) {
       cells.foldLeft(Board.empty) {
         case (board, (cell, value)) => board.set(cell, value) }
 
+    def apply(cells: List[Int]): Board = Board(Map.empty ++
+      cells.zipWithIndex.collect {
+        case (value, index) if value > 0 =>
+          Cell(1 + index / (n * n), 1 + index % (n * n)) -> value
+      })
+
   }
 
 }
