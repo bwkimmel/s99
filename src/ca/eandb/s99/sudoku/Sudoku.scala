@@ -70,22 +70,22 @@ case class Sudoku(n: Int = 3) {
               Cell(br, bc, cr, cc)))))
     val groups: Seq[List[Cell]] = (cellsByRow ++ cellsByCol ++ cellsByBlock)
 
-    def pruneBranchTuples(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
+    def pruneNakedTuples(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
       branches ++ (group.groupBy(branches) collect {
         case (values, cells) if cells.size >= values.size =>
           (group -- cells.take(values.size)).map(cell =>
             (cell -> (branches(cell) -- values))) } flatten)
 
-    def pruneSlotTuples(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
+    def pruneHiddenTuples(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
       branches ++ (all.groupBy(value => group.filter(branches(_)(value))) collect {
         case (cells, values) if values.size >= cells.size =>
           cells.map(cell =>
             (cell -> values.take(cells.size))) } flatten)
 
-    def reduceGroup(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
-      pruneSlotTuples(pruneBranchTuples(branches, group), group)
+    def prune(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
+      pruneHiddenTuples(pruneNakedTuples(branches, group), group)
 
-    groups.foldLeft(branches)(reduceGroup)
+    groups.foldLeft(branches)(prune)
   }
 
   case class Board(cells: Map[Cell, Int], branches: Map[Cell, Set[Int]]) {
@@ -94,8 +94,13 @@ case class Sudoku(n: Int = 3) {
       allCells.filterNot(cells.keySet).find(branches(_).size == 1).map(cell =>
         (cell, branches(cell).head))
 
+    def dots3(poss: Set[Int]): String =
+      List(
+        (0x2800 + poss.filter(1 to 6 contains).map(x => 1 << (x - 1)).sum).toChar,
+        (0x2800 + poss.filter(7 to 9 contains).map(x => 1 << (x - 7)).sum).toChar).mkString
+
     override def toString = {
-      val strs = cells.mapValues(symbols)
+      val strs = cells.mapValues(symbols).mapValues(_ + " ")
 
       val lineSep = (1 to n).map(x =>
         (1 to n).map(x => " ").mkString("  ")).mkString("\n", " | ", "\n")
@@ -105,10 +110,11 @@ case class Sudoku(n: Int = 3) {
       (1 to n).map(br =>
         (1 to n).map(cr =>
           (1 to n).map(bc =>
-            (1 to n).map(cc =>
-              strs.getOrElse(Cell(br, bc, cr, cc), "."))
-              .mkString("  "))
-            .mkString(" | "))
+            (1 to n).map(cc => {
+              val cell = Cell(br, bc, cr, cc)
+              strs.getOrElse(cell, dots3(branches(cell))) })
+              .mkString(" "))
+            .mkString("| "))
           .mkString(lineSep))
         .mkString(blockSep)
     }
