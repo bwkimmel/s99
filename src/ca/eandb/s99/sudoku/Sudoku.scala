@@ -32,6 +32,9 @@ case class Sudoku(n: Int = 3) {
           Some(copy(cellRow = i, cellCol = j))
         else None) flatten))
 
+    val row = (blockRow - 1) * n + cellRow
+    val col = (blockCol - 1) * n + cellCol
+
   }
 
   object Cell {
