@@ -70,6 +70,62 @@ case class Sudoku(n: Int = 3) {
               Cell(br, bc, cr, cc)))))
     val groups: Seq[List[Cell]] = (cellsByRow ++ cellsByCol ++ cellsByBlock)
 
+    def pruneByRowSubgroupElimination(branches: Map[Cell, Set[Int]]): Map[Cell, Set[Int]] =
+      branches ++
+        cellsByRow.flatMap(row =>
+          all.flatMap(value =>
+            row.filter(branches(_)(value)).map(_.blockCol).distinct match {
+              case bc :: Nil =>
+                val br = row.head.blockRow
+                (1 to n view).filterNot(_ == row.head.cellRow).flatMap(cr =>
+                  (1 to n view).map(cc => {
+                    val cell = Cell(br, bc, cr, cc)
+                    cell -> (branches(cell) - value) }))
+              case _ => Nil
+            }))
+
+    def pruneByColSubgroupElimination(branches: Map[Cell, Set[Int]]): Map[Cell, Set[Int]] =
+      branches ++
+        cellsByCol.flatMap(col =>
+          all.flatMap(value =>
+            col.filter(branches(_)(value)).map(_.blockRow).distinct match {
+              case br :: Nil =>
+                val bc = col.head.blockCol
+                (1 to n view).filterNot(_ == col.head.cellCol).flatMap(cc =>
+                  (1 to n view).map(cr => {
+                    val cell = Cell(br, bc, cr, cc)
+                    cell -> (branches(cell) - value) }))
+              case _ => Nil
+            }))
+
+    def pruneByBlockRowSubgroupElimination(branches: Map[Cell, Set[Int]]): Map[Cell, Set[Int]] =
+      branches ++
+        cellsByBlock.flatMap(block =>
+          all.flatMap(value =>
+            block.filter(branches(_)(value)).map(_.cellRow).distinct match {
+              case cr :: Nil =>
+                val br = block.head.blockRow
+                (1 to n view).filterNot(_ == block.head.blockCol).flatMap(bc =>
+                  (1 to n view).map(cc => {
+                    val cell = Cell(br, bc, cr, cc)
+                    cell -> (branches(cell) - value) }))
+              case _ => Nil
+            }))
+
+    def pruneByBlockColSubgroupElimination(branches: Map[Cell, Set[Int]]): Map[Cell, Set[Int]] =
+      branches ++
+        cellsByBlock.flatMap(block =>
+          all.flatMap(value =>
+            block.filter(branches(_)(value)).map(_.cellCol).distinct match {
+              case cc :: Nil =>
+                val bc = block.head.blockCol
+                (1 to n view).filterNot(_ == block.head.blockRow).flatMap(br =>
+                  (1 to n view).map(cr => {
+                    val cell = Cell(br, bc, cr, cc)
+                    cell -> (branches(cell) - value) }))
+              case _ => Nil
+            }))
+
     def pruneNakedTuples(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
       branches ++ (group.groupBy(branches) collect {
         case (values, cells) if cells.size >= values.size =>
@@ -83,7 +139,12 @@ case class Sudoku(n: Int = 3) {
             (cell -> values.take(cells.size))) } flatten)
 
     def prune(branches: Map[Cell, Set[Int]], group: List[Cell]): Map[Cell, Set[Int]] =
-      pruneHiddenTuples(pruneNakedTuples(branches, group), group)
+      pruneByBlockRowSubgroupElimination(
+        pruneByBlockColSubgroupElimination(
+          pruneByRowSubgroupElimination(
+            pruneByColSubgroupElimination(
+              pruneHiddenTuples(
+                pruneNakedTuples(branches, group), group)))))
 
     groups.foldLeft(branches)(prune)
   }
